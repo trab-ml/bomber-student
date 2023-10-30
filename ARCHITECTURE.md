@@ -1,5 +1,26 @@
 # Architecture LAN
 
+    *Serveur de Jeu (Local)*
+
+    - Gestion des connexions (sockets)
+    - Authentification des Joueurs
+    - Création et Gestion des Parties
+    - Synchronisation des Joueurs
+    - Logique du Jeu
+    - Gestion de la carte du jeu
+    - Gestion des joueurs et des bombes
+
+    *Clients (Côté Joueur)*
+
+    - Interface Utilisateur (simpliste)
+    - Affichage de la carte et des joueurs
+    - Indicateurs de score et de temps
+    - Communication avec le serveur (sockets)
+    - Gestion des Actions du Joueur
+    - Déplacement du personnage
+    - Placement des bombes
+    - Gestion des événements de jeu
+
 [Joueur 1]    [Joueur 2]    ...    [Joueur N]
     |             |                   |
     |             |                   |
@@ -27,6 +48,8 @@
        |       +-- Assignation de joueurs aux parties
        |
        +-- Synchronisation des Joueurs
+
+(À visualiser dans vscode)
 
 ## Spécifications Techniques
 

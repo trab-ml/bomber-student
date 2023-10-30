@@ -32,6 +32,8 @@
                     |
                     +-- Gestion des événements de jeu
 
+(À visualiser dans vscode)
+
 ## Spécifications Techniques
 
 Le serveur de jeu local est écrit en langage C et gère la logique du jeu "Bomber Student".

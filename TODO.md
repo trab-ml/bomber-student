@@ -26,3 +26,4 @@
 - <https://oldschoolprg.x10.mx/projets.php#bomberman>
 - <https://codes-sources.commentcamarche.net/source/17477-bomberman-code-r-avec-sdl-simple-directmedia-layer>
 - <https://youtu.be/77vYKsXC4IE?si=CTjuEt7pcNMZnZAL>
+- <https://youtube.com/playlist?list=PLGVRGFq_teMPG5MPmZrDaVh3VlsGuC97k&si=b4EJtzW9W7dDLUxd>

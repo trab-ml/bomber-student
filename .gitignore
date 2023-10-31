@@ -1,5 +1,6 @@
 # Ignorer les fichiers d'exécution
 *.exe
+./bin
 
 # Ignorer les fichiers de sauvegarde
 *~

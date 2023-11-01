@@ -6,3 +6,7 @@
 
 # Ignorer les fichiers de configuration de Visual Studio Code
 .vscode/
+/CMakeLists.txt
+/bin/
+/obj/
+/cmake-build-debug/

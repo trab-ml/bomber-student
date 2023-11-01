@@ -10,12 +10,14 @@ extern const unsigned int BUFFER_LEN;
 extern const unsigned int MAX_MISS;
 extern const unsigned int CLIENT_BLOC_SIZE;
 
+// Infos d'un client
 typedef struct {
     struct sockaddr_in addr;
     char login[SERVER_MAX_SIZE_LOGIN];
     unsigned counter;
 } clientInfo;
 
+// Liste des clients
 typedef struct {
     clientInfo *list;
     unsigned int capacity;

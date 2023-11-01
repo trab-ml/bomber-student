@@ -5,8 +5,12 @@
 #include <string.h>
 #include "socket_utils.h"
 #include "client_list.h"
+#include "test_cJSON.h"
 
-// gcc src/main.c src/socket_utils.c src/client_list.c -Iinclude -o bin/main 
+// gcc src/main.c src/socket_utils.c src/client_list.c src/test_cJSON.c src/cJSON.c -Iinclude -o bin/main
+// [SERVER] bin/main 49151
+//
+// [CLIENT] nc -u localhost 49151
 
 #define SERVER_MAX_SIZE_LOGIN 10
 
@@ -57,7 +61,7 @@ int main(int argc, char **argv)
             {
                 if (len < 2 || len + 1 >= SERVER_MAX_SIZE_LOGIN)
                 {
-                    // specify to the client we got an error.
+                    // Spécifie au client qu'il y'a erreur.
                     if (sendto(fdsocket, "", 0, MSG_DONTWAIT,
                                (struct sockaddr *)&clientAdresse, addrLen) < 0)
                     {
@@ -67,7 +71,7 @@ int main(int argc, char **argv)
                 }
                 else
                 {
-                    // specify to the client that everything is OK.
+                    // Spécifie au client que tout est OK.
                     if (sendto(fdsocket, " ", 1, MSG_DONTWAIT,
                                (struct sockaddr *)&clientAdresse, addrLen) < 0)
                     {
@@ -75,15 +79,15 @@ int main(int argc, char **argv)
                         exit(EXIT_FAILURE);
                     }
 
-                    // nouveau client
-                    buffer[len - 1] = '\0';
+                    // Ajoute le terminateur de chaîne
+                    buffer[len] = '\0';
 
-                    // on prévient tous le monde que le nouveau client vient d'arriver.
-                    char message[strlen(buffer) + strlen("Dite bonjour à ") + 1];
+                    // on prévient tout le monde que le nouveau client vient d'arriver.
+                    char message[strlen("Dite bonjour à ") + strlen(buffer) + 1];
                     strcpy(message, "Dite bonjour à ");
                     strcat(message, buffer);
 
-                    // on previent tous le monde.
+                    // on prévient tout le monde.
                     for (unsigned i = 0; i < clients.size; i++)
                     {
                         if (sendto(fdsocket, message, strlen(message), MSG_DONTWAIT,
@@ -94,37 +98,49 @@ int main(int argc, char **argv)
                         }
                     }
 
-                    // on l'ajoute dans la liste.
+                    // on l'ajoute à la liste.
                     addClient(&clients, clientAdresse, buffer);
                 }
             }
             else
             {
-                // Ajout du terminateur de chaîne
+                // Ajoute le terminateur de chaîne
                 buffer[len] = '\0';
-                char response[strlen(clients.list[pos].login) + 3 + strlen(buffer) + 1];
-                strcpy(response, clients.list[pos].login);
-                strcat(response, " : ");
-                strcat(response, buffer);
+                // Le client a t-il fait une requête "GET maps/list" ?
+                if (strncmp("GET maps/list", buffer, strlen("GET maps/list")) == 0)
+                {
+                    // properly init the buffer
+                    // generate the JSON by passing an object of an instance of queryGetMapsList
+                    // cpy the generated response into the buffer
+                    // send it to the client 
+                    queryGetMapsList responseToGetMapsList;
+                    getResponseInJSON(&responseToGetMapsList);
 
-                // On broadcast le message.
-                for (unsigned i = 0; i < clients.size; i++)
-                    if (i != pos)
+                    char response[14 + strlen(buffer) + 1];
+                    strcpy(response, "JSON response");
+                    strcat(response, buffer);
+
+                    if (sendto(fdsocket, response, strlen(response), MSG_DONTWAIT,
+                               (struct sockaddr *)&clients.list[pos].addr, addrLen) < 0)
                     {
-                        clients.list[i].counter--;
-                        if (sendto(fdsocket, response, strlen(response), MSG_DONTWAIT,
-                                   (struct sockaddr *)&clients.list[i].addr, addrLen) < 0)
-                        {
-                            perror("Problème à l'envoie");
-                            exit(EXIT_FAILURE);
-                        }
+                        perror("Problème à l'envoie");
+                        exit(EXIT_FAILURE);
                     }
-                    else
-                        clients.list[i].counter = MAX_MISS;
+                }
+                else
+                {
+                    char response[] = "Bad Request !\n";
+                    if (sendto(fdsocket, response, strlen(response), MSG_DONTWAIT,
+                               (struct sockaddr *)&clients.list[pos].addr, addrLen) < 0)
+                    {
+                        perror("Problème à l'envoie");
+                        exit(EXIT_FAILURE);
+                    }
+                }
             }
         }
 
-        // remove the ghosts.
+        // Supprime les clients inactifs (déconnectés).
         for (unsigned i = 0; i < clients.size;)
         {
             if (clients.list[i].counter > 0)

@@ -12,13 +12,13 @@
  */
 int initGetResponse(queryGetMapsList *database)
 {
-    // Initialisation des valeurs de la base de données
+    // Initialise des valeurs de la base de données
     database->action = "maps/list";
     database->statut = "200";
     database->message = "ok";
     database->nbMapsList = 1;
 
-    // Création d'une structure de mapData
+    // Crée une structure de mapData
     mapData map = {0, 24, 8, "************************"
                              "=----------------------="
                              "=----==============----="
@@ -79,51 +79,68 @@ void freeMapsData(mapsData *mapList)
     }
 }
 
-int main()
+// Définit la fonction parseInJSON
+/**
+ * @brief Crée le JSON correspondant à une structure de donnée de type queryGetMapsList
+ * @param database structure de type queryGetMapsList contenant les données
+ * @return pointeur de chaîne de caractères contenant le JSON
+*/
+char *parseInJSON(queryGetMapsList *database)
 {
-    // Crée et initialise une structure représentant une réponse de requête
-    queryGetMapsList responseToGetMapsList;
-    initGetResponse(&responseToGetMapsList);
-
     // Crée un objet cJSON pour représenter le JSON
     cJSON *root = cJSON_CreateObject();
     if (root == NULL)
     {
         printf("Erreur lors de la désérialisation du JSON.\n");
-        return 1;
+        return NULL; // Gestion de l'erreur
     }
 
-    // Ajoute les éléments au JSON en utilisant les données de responseToGetMapsList.
-    cJSON_AddStringToObject(root, "action", responseToGetMapsList.action);
-    cJSON_AddStringToObject(root, "statut", responseToGetMapsList.statut);
-    cJSON_AddStringToObject(root, "message", responseToGetMapsList.message);
-    cJSON_AddNumberToObject(root, "nbMapsList", responseToGetMapsList.nbMapsList);
+    // Ajoute les éléments au JSON en utilisant les données de database
+    cJSON_AddStringToObject(root, "action", database->action);
+    cJSON_AddStringToObject(root, "statut", database->statut);
+    cJSON_AddStringToObject(root, "message", database->message);
+    cJSON_AddNumberToObject(root, "nbMapsList", database->nbMapsList);
 
-    // Crée un tableau pour les objets "maps".
+    // Crée un tableau pour les objets "maps"
     cJSON *mapsArray = cJSON_CreateArray();
 
-    // Ajoute chaque mapData à l'array.
-    for (unsigned int i = 0; i < responseToGetMapsList.mapList.size; i++)
+    // Ajoute chaque mapData à l'array
+    for (unsigned int i = 0; i < database->mapList.size; i++)
     {
         cJSON *mapObject = cJSON_CreateObject();
-        cJSON_AddNumberToObject(mapObject, "id", responseToGetMapsList.mapList.list[i].id);
-        cJSON_AddNumberToObject(mapObject, "width", responseToGetMapsList.mapList.list[i].width);
-        cJSON_AddNumberToObject(mapObject, "height", responseToGetMapsList.mapList.list[i].height);
-        cJSON_AddStringToObject(mapObject, "content", responseToGetMapsList.mapList.list[i].content);
+        cJSON_AddNumberToObject(mapObject, "id", database->mapList.list[i].id);
+        cJSON_AddNumberToObject(mapObject, "width", database->mapList.list[i].width);
+        cJSON_AddNumberToObject(mapObject, "height", database->mapList.list[i].height);
+        cJSON_AddStringToObject(mapObject, "content", database->mapList.list[i].content);
         cJSON_AddItemToArray(mapsArray, mapObject);
     }
 
     cJSON_AddItemToObject(root, "maps", mapsArray);
 
-    // Convertit le cJSON en une chaîne JSON.
+    // Convertit le cJSON en une chaîne JSON
     char *jsonStr = cJSON_Print(root);
+
+    // Libère la mémoire allouée par cJSON
+    cJSON_Delete(root);
+
+    return jsonStr; // Renvoyer la chaîne JSON
+}
+
+/**
+ * @brief retourne la réponse JSON correspondante à la requête "GET maps/list" 
+ * @param responseToGetMapsList la structure contenant les infos à convertir en JSON
+ * @return 0 en cas de succès
+*/
+int getResponseInJSON(queryGetMapsList *responseToGetMapsList) {
+    // Crée et initialise une structure représentant une réponse de requête
+    initGetResponse(responseToGetMapsList);
+
+    // Convertit les données cJSON de la stuct responseToGetMapsList en JSON.
+    char *jsonStr = parseInJSON(responseToGetMapsList);
 
     // Affiche la chaîne JSON résultante.
     printf("%s\n", jsonStr);
 
-    // Libère la mémoire allouée par cJSON et la chaîne JSON.
-    cJSON_Delete(root);
     free(jsonStr);
-
     return 0;
 }

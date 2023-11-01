@@ -28,12 +28,14 @@ typedef struct {
 } queryGetMapsList;
 
 // Initialise la base de données
-int initGetResponse(queryGetMapsList *database)
+int initGetResponse(queryGetMapsList *database);
 
 // Ajoute une map à la liste de map
 int addMap(queryGetMapsList *database, mapData map);
 
 // Libère la mémoire occupée de la liste de maps
 void freeMapsData(mapsData *mapList);
+
+int getResponseInJSON(queryGetMapsList *responseToGetMapsList);
 
 #endif

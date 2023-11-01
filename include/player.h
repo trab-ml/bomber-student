@@ -10,14 +10,19 @@
 #include <time.h>
 #include <string.h>
 #include <stdbool.h>
+#include "../include/tools.h"
+#include "../include/bomb.h"
+
 #define LENGTH 100
 #define WIDTH 80
 
-typedef struct bomb{
-	int b_x,b_y;
-	int impact_dist;
-	bool Bb;
-}bomb;
+typedef struct Fifo Fifo;
+
+//typedef struct bomb{
+//	int b_x,b_y;
+//	int impact_dist;
+//	bool Bb;
+//}bomb;
 
 typedef struct Player{
 	int x,y; // player's position
@@ -39,7 +44,7 @@ typedef struct Player{
 	void (*pose_bomb)(struct Player *);
 
 	// things;
-	bomb *mybomb;
+	Fifo *mybomb;
 }player,*players;
 
 void init_player(player *p);
@@ -51,7 +56,8 @@ void move_left(player *p);
 
 void pose_bomb(player *p);
 
-void show_bomb(bomb *b);
+//void show_bomb(bomb *b);
+
 void show_info_player(player *p);
 
 void in_action(player *p);

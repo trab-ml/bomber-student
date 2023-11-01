@@ -5,3 +5,10 @@ Ce projet a pour but de créer un serveur de jeu proposant à ses utilisateurs d
 part le client permettant à des utilisateurs de se connecter au serveur afin de jouer les uns contre
 les autres.
 
+## player's action 
+### movement
+w a s d 
+### poser bomb
+p
+### show all bomb 
+z 

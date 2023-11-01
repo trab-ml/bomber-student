@@ -57,7 +57,7 @@ void move_left(player *p) {
 
 void pose_bomb(player *p) {
 	if (p->nbcb < p->nb_classic_b){
-		bomb *b = (bomb *)malloc(sizeof(bomb));
+		bomb *b = &p->mybomb[p->nbcb];
 		b->b_x = p->x;
 		b->b_y = p->y;
 		b->impact_dist = p->impact_dist;
@@ -78,7 +78,7 @@ void show_bomb(bomb *b){
 
 void show_info_player(player *p){
 	printf("[%d,%d]\n",p->x,p->y);
-	for (int i = 0; i < p->nbcb+1; ++i) {
+	for (int i = 0; i < p->nbcb; ++i) {
 		show_bomb(&p->mybomb[i]);
 	}
 }
@@ -87,15 +87,14 @@ void in_action(player *p) {
 	printf("player is playing");
 	char input;
 	printf("Player position: (%d, %d)\n", p->x, p->y);
-	printf("Enter move (w/a/s/d): ");
+	printf("Enter move (w/a/s/d)\n");
+
 	while ((input = getchar()) != 'q') { // 按 'q' 退出
-		printf("Player position: (%d, %d)\n", p->x, p->y);
-		printf("Enter:");
+		printf("Player position: (%d,%d) - ", p->x, p->y);
+		printf("Enter:\n");
 		switch (input) {
 			case 'w': {
 				p->move_up(p);
-//				sprintf(msg,"move up to [%d,%d]",p->x,p->y);
-//				fprintf(log,"%s\n",msg);
 				break;
 			}
 			case 's': {
@@ -112,13 +111,18 @@ void in_action(player *p) {
 			}
 			case 'p': {
 				p->pose_bomb(p);
+				break;
 			}
 			case 'z':{
 				p->show_info_player(p);
+				break;
 			}
 			default:{
 				continue;
 			}
+		}
+		while((input = getchar()) != '\n' && input != EOF){
+
 		}
 	}
 }

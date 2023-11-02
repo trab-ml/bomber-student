@@ -131,7 +131,7 @@ char *parseInJSON(queryGetMapsList *database)
  * @param responseToGetMapsList la structure contenant les infos à convertir en JSON
  * @return 0 en cas de succès
 */
-int getResponseInJSON(queryGetMapsList *responseToGetMapsList) {
+char *getResponseInJSON(queryGetMapsList *responseToGetMapsList) {
     // Crée et initialise une structure représentant une réponse de requête
     initGetResponse(responseToGetMapsList);
 
@@ -139,8 +139,8 @@ int getResponseInJSON(queryGetMapsList *responseToGetMapsList) {
     char *jsonStr = parseInJSON(responseToGetMapsList);
 
     // Affiche la chaîne JSON résultante.
-    printf("%s\n", jsonStr);
+    // printf("%s\n", jsonStr);
 
-    free(jsonStr);
-    return 0;
+    // free(jsonStr);
+    return jsonStr;
 }

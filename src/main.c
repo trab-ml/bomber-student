@@ -109,16 +109,14 @@ int main(int argc, char **argv)
                 // Le client a t-il fait une requête "GET maps/list" ?
                 if (strncmp("GET maps/list", buffer, strlen("GET maps/list")) == 0)
                 {
-                    // properly init the buffer
-                    // generate the JSON by passing an object of an instance of queryGetMapsList
-                    // cpy the generated response into the buffer
-                    // send it to the client 
+                    char *jsonResponse = malloc(MAX_JSON_SIZE * sizeof(char));
+                    char response[MAX_JSON_SIZE + 1];
                     queryGetMapsList responseToGetMapsList;
-                    getResponseInJSON(&responseToGetMapsList);
-
-                    char response[14 + strlen(buffer) + 1];
-                    strcpy(response, "JSON response");
-                    strcat(response, buffer);
+                    
+                    jsonResponse = getResponseInJSON(&responseToGetMapsList);
+                    response[MAX_JSON_SIZE] = '\0';
+                    strcpy(response, jsonResponse);
+                    // strcat(response, buffer);
 
                     if (sendto(fdsocket, response, strlen(response), MSG_DONTWAIT,
                                (struct sockaddr *)&clients.list[pos].addr, addrLen) < 0)

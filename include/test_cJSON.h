@@ -3,6 +3,9 @@
 
 #include "cJSON.h"
 
+// Taille max pour une réponse JSON
+#define MAX_JSON_SIZE 399
+
 // Infos sur une map
 typedef struct {
     int id;
@@ -36,6 +39,6 @@ int addMap(queryGetMapsList *database, mapData map);
 // Libère la mémoire occupée de la liste de maps
 void freeMapsData(mapsData *mapList);
 
-int getResponseInJSON(queryGetMapsList *responseToGetMapsList);
+char *getResponseInJSON(queryGetMapsList *responseToGetMapsList);
 
 #endif

@@ -13,7 +13,7 @@ void show_all_bomb(fifo *f) {
 }
 
 void show_bomb(bomb *b){
-	printf("<%d,%d>:",b->b_x,b->b_y);
+	printf("bomb: <%d,%d>:",b->b_x,b->b_y);
 	printf("{%d}\n",b->Bb);
 }
 
@@ -39,7 +39,7 @@ void enqueue(fifo *f,bomb b){
 
 bomb dequeue(fifo *f) {
 	if (f->front == NULL) {
-		printf("Queue is empty, cannot dequeue.\n");
+		printf("No more bomb from you.\n");
 		return (bomb){0, 0, 0, false};
 	}
 	node *temp = f->front;

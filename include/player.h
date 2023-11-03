@@ -10,7 +10,6 @@
 #include <time.h>
 #include <string.h>
 #include <stdbool.h>
-#include "../include/tools.h"
 #include "../include/bomb.h"
 
 #define LENGTH 100
@@ -47,7 +46,7 @@ typedef struct Player{
 	Fifo *mybomb;
 }player,*players;
 
-void init_player(player *p);
+void init_player(player *p,int w,int h);
 
 void move_up(player *p);
 void move_down(player *p);
@@ -61,6 +60,6 @@ void pose_bomb(player *p);
 void show_info_player(player *p);
 
 void in_action(player *p);
-
+void in_game(player *p);
 
 #endif //BOMBER_STUDENT_SRC_PLAYER_H_

@@ -4,11 +4,11 @@
 
 #include "../include/player.h"
 
-void init_player(player *p) {
+void init_player(player *p,int w,int h) {
 	// position
 	srand(time(NULL));
-	p->x = rand() % LENGTH;
-	p->y = rand() % WIDTH;
+	p->x = rand() % h;
+	p->y = rand() % w;
 	// status
 	p->show_info_player = show_info_player;
 	p->speed = 1;
@@ -63,41 +63,23 @@ void pose_bomb(player *p){
 
 
 
-//void pose_bomb(player *p) {
-//	if (p->nbcb < p->nb_classic_b){
-//
-//		bomb *b = &p->mybomb[p->nbcb];
-//		b->b_x = p->x;
-//		b->b_y = p->y;
-//		b->impact_dist = p->impact_dist;
-//		b->Bb = false;
-//		p->nbcb ++;
-//		printf("<pose pomb>");
-//		show_bomb(b);
-//	}else{
-//		printf("<no more avaliable>");
-//	}
-//}
-
-//void show_bomb(bomb *b){
-//	printf("<%d,%d>:",b->b_x,b->b_y);
-//	printf("{%d}\n",b->Bb);
-//}
-
-
 void show_info_player(player *p){
 	printf("[%d,%d]\n",p->x,p->y);
 	show_all_bomb(p->mybomb);
 }
 
 void in_action(player *p) {
+	if (p == NULL){
+		perror("player is null");
+	}
 	printf("player is playing");
 	char input;
 	printf("Player position: (%d, %d)\n", p->x, p->y);
 	printf("Enter move (w/a/s/d)\n");
 
 	while ((input = getchar()) != 'q') { // 按 'q' 退出
-//		clear_line();
+		printf("\033[H\033[J");
+		p->show_info_player(p);
 		printf("Player position: (%d,%d) - ", p->x, p->y);
 		printf("Enter:\n");
 		switch (input) {
@@ -121,13 +103,10 @@ void in_action(player *p) {
 				p->pose_bomb(p);
 				break;
 			}
-			case 'z':{ // show player's info
-				p->show_info_player(p);
-				break;
-			}
 			case 'e':{ // exploser 1er bomb
-
-
+				dequeue(p->mybomb);
+				p->nbcb--;
+				break;
 			}
 			default:{
 				printf("INVALIDE INPUT");
@@ -135,7 +114,64 @@ void in_action(player *p) {
 			}
 		}
 		while((input = getchar()) != '\n' && input != EOF){
-
 		}
 	}
 }
+
+void in_game(player *p){
+	if (p == NULL){
+		perror("player is null");
+	}
+	printf("playing");
+	char input = getchar();
+	printf("\033[H\033[J");
+	p->show_info_player(p);
+	printf("Player position: (%d,%d) - ", p->x, p->y);
+	printf("Enter:\n");
+	switch (input) {
+		case 'w': { // move
+			p->move_up(p);
+			break;
+		}
+		case 's': {// move
+			p->move_down(p);
+			break;
+		}
+		case 'a': {// move
+			p->move_left(p);
+			break;
+		}
+		case 'd': {// move
+			p->move_right(p);
+			break;
+		}
+		case 'p': { // poser bomb
+			p->pose_bomb(p);
+			break;
+		}
+		case 'e':{ // exploser 1er bomb
+			dequeue(p->mybomb);
+			p->nbcb--;
+			break;
+		}
+		default:{
+			printf("INVALIDE INPUT");
+			break;
+		}
+	}
+	while((input = getchar()) != '\n' && input != EOF){
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

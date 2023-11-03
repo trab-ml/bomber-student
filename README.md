@@ -6,9 +6,10 @@ part le client permettant à des utilisateurs de se connecter au serveur afin de
 les autres.
 
 ## player's action 
+use `./dd.sh` to start game
 ### movement
 w a s d 
 ### poser bomb
 p
-### show all bomb 
-z 
+### expolser 1 bomb
+e

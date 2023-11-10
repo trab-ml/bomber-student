@@ -9,6 +9,8 @@
 
 // gcc src/main.c src/socket_utils.c src/client_list.c src/test_cJSON.c src/cJSON.c -Iinclude -o bin/main
 // [SERVER] bin/main 49151
+// OR
+// [SERVER] make; bin/main 49151
 //
 // [CLIENT] nc -u localhost 49151
 

@@ -16,7 +16,7 @@ SRC = $(wildcard $(SRC_DIR)/*.c)
 OBJ = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC))
 
 # Nom du fichier exécutable final (dans le répertoire OBJ_DIR)
-TARGET = $(OBJ_DIR)/mycalculator
+TARGET = $(OBJ_DIR)/main
 
 # Chemin des fichiers d'en-tête
 INC = -I$(INC_DIR)

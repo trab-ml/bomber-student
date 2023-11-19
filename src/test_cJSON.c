@@ -56,10 +56,13 @@ int addMap(queryGetMapsList *database, mapData map)
             return 0;
         }
         database->mapList.list = newList;
+
+        free(newList);
     }
 
     database->mapList.list[database->mapList.size] = map;
     database->mapList.size++;
+
     return 1;
 }
 
@@ -140,7 +143,6 @@ char *getResponseInJSON(queryGetMapsList *responseToGetMapsList) {
     // Affiche la chaîne JSON résultante.
     // printf("%s\n", jsonStr);
 
-    // free(jsonStr);
     return jsonStr;
 }
 
@@ -173,7 +175,7 @@ char *getErrorMessage(bool unknowErr) {
     // Convertit l'objet cJSON en une chaîne JSON
     char *jsonStr = cJSON_Print(root);
 
-    printf("errMsg =>\n%s\n", jsonStr);
+    // printf("errMsg =>\n%s\n", jsonStr);
 
     // Libère la mémoire allouée par cJSON
     cJSON_Delete(root);

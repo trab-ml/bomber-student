@@ -1,5 +1,22 @@
 BONNES PRATIQUES
  + https://users.ece.cmu.edu/~eno/coding/CCodingStandard.html
+ + https://sourceware.org/gdb/current/onlinedocs/gdb#Running
+ + https://valgrind.org/docs/manual/manual-core-adv.html#manual-core-adv.gdbserver-simple
+        [SERVER]
+                + For Debugging
+                gdb ./bin/main 
+                (gdb) run 49151
+                ./bin/main 4915
+
+                + For Memory Analysis
+                // -v --> verbose
+                // valgrind --vgdb=yes --vgdb-error=0 ./bin/main 49151
+                // valgrind --leak-check=full ./bin/main 49151
+                valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./bin/main 49151
+
+        [CLIENT]
+                nc -u localhost 49151
+                ...
 
 DEPENDANCES
  + cJSON https://github.com/DaveGamble/cJSON 
@@ -8,23 +25,6 @@ nc -u server_addr 49151
 nc -u localhost 49151
 
 STRUCTURE DU PROJET
-project/
-|-- src/
-|   |-- main.c
-|   |-- module1.c
-|   |-- module2.c
-|   |-- ...
-|-- include/
-|   |-- module1.h
-|   |-- module2.h
-|   |-- ...
-|-- bin/
-|-- build/
-|-- doc/
-|-- Makefile
-|-- README.md
-
-CURRENTLY
 bomber-student/
 |-- src/
 |   |-- cJSON.c
@@ -32,9 +32,13 @@ bomber-student/
 |   |-- testcJSON.c
 |   |-- ...
 |-- include/
-|   |-- cJSON.h
+|   | ... les .h ...
 |-- bin/
-    ... les .exe ...
+|   | ... les .exe ...
+|-- doc/
+|   | ... doc + rscr ...
+|-- Makefile
+|-- README.md
 
 + Créer un serveur permettant à des clients de se connecter
     + Le premier msg du client constitue son login (qui sera stocké par le serveur comme tel.)

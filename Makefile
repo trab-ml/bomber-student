@@ -2,7 +2,7 @@
 CC = gcc
 
 # Options de compilation
-CFLAGS = -Wall -Werror
+CFLAGS = -Wall -Werror -g
 
 # Répertoires
 SRC_DIR = src

@@ -4,7 +4,8 @@
 #include "cJSON.h"
 #include <stdbool.h>
 
-// Taille maximale pour une réponse get
+// Taille maximale pour un plateau du jeu
+#define GAME_BOARD_SIZE 193
 #define GET_QUERY_RESPONSE_SIZE 399
 // Taille max pour un message d'erreur
 #define ERR_MSG_SIZE 18

@@ -102,6 +102,7 @@ int main(int argc, char **argv)
 
                     // on l'ajoute à la liste.
                     addClient(&clients, clientAdresse, buffer);
+                    // After received a kill signal on the server, firstly free clientList, and quit ?? 
                 }
             }
             else
@@ -150,7 +151,7 @@ int main(int argc, char **argv)
                         exit(EXIT_FAILURE);
                     }
 
-                    // when it should be "Unknown Error !"?
+                    // When it should be "Unknown Error !"?
                 }
             }
         }

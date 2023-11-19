@@ -2,9 +2,12 @@
 #define TEST_CJSON_H
 
 #include "cJSON.h"
+#include <stdbool.h>
 
-// Taille max pour une réponse JSON
-#define MAX_JSON_SIZE 399
+// Taille maximale pour une réponse get
+#define GET_QUERY_RESPONSE_SIZE 399
+// Taille max pour un message d'erreur
+#define ERR_MSG_SIZE 18
 
 // Infos sur une map
 typedef struct {
@@ -40,5 +43,7 @@ int addMap(queryGetMapsList *database, mapData map);
 void freeMapsData(mapsData *mapList);
 
 char *getResponseInJSON(queryGetMapsList *responseToGetMapsList);
+
+char *getErrorMessage(bool unknowErr);
 
 #endif

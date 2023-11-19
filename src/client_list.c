@@ -40,4 +40,4 @@ void addClient(clientList *clients, struct sockaddr_in addr, char *login)
     assert(!strcmp(clients->list[clients->size].login, login));
 
     clients->size++;
-} // addClient
+}

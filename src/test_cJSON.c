@@ -79,7 +79,6 @@ void freeMapsData(mapsData *mapList)
     }
 }
 
-// Définit la fonction parseInJSON
 /**
  * @brief Crée le JSON correspondant à une structure de donnée de type queryGetMapsList
  * @param database structure de type queryGetMapsList contenant les données
@@ -92,7 +91,7 @@ char *parseInJSON(queryGetMapsList *database)
     if (root == NULL)
     {
         printf("Erreur lors de la désérialisation du JSON.\n");
-        return NULL; // Gestion de l'erreur
+        return NULL;
     }
 
     // Ajoute les éléments au JSON en utilisant les données de database
@@ -117,13 +116,13 @@ char *parseInJSON(queryGetMapsList *database)
 
     cJSON_AddItemToObject(root, "maps", mapsArray);
 
-    // Convertit le cJSON en une chaîne JSON
+    // Convertit l'objet cJSON en une chaîne JSON
     char *jsonStr = cJSON_Print(root);
 
     // Libère la mémoire allouée par cJSON
     cJSON_Delete(root);
 
-    return jsonStr; // Renvoyer la chaîne JSON
+    return jsonStr;
 }
 
 /**
@@ -144,3 +143,42 @@ char *getResponseInJSON(queryGetMapsList *responseToGetMapsList) {
     // free(jsonStr);
     return jsonStr;
 }
+
+/**
+ * @brief retourne le message d'erreur approprié en cas d'échec de "GET maps/list"
+ * @param unknowErr booléen servant à définir le message d'erreur
+ * @return le message d'erreur au format JSON
+*/
+char *getErrorMessage(bool unknowErr) {
+
+    int statut = 520;
+    char msg[] = "Unknown Error";
+
+    if (!unknowErr) {
+        statut = 400;
+        strcpy(msg, "Bad request");
+    }
+
+    // Crée un objet cJSON pour représenter le JSON
+    cJSON *root = cJSON_CreateObject();
+    if (root == NULL)
+    {
+        printf("Erreur lors de la création du JSON.\n");
+        return NULL;
+    }
+
+    cJSON_AddNumberToObject(root, "statut", statut);
+    cJSON_AddStringToObject(root, "message", msg);
+
+    // Convertit l'objet cJSON en une chaîne JSON
+    char *jsonStr = cJSON_Print(root);
+
+    printf("errMsg =>\n%s\n", jsonStr);
+
+    // Libère la mémoire allouée par cJSON
+    cJSON_Delete(root);
+
+    return jsonStr;
+}
+
+// char response[] = getErrorMessage(true); 

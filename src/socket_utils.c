@@ -43,4 +43,4 @@ int initSocket(int port)
     }
 
     return fdsocket;
-} // initSocket
+}

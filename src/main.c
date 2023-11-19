@@ -111,14 +111,17 @@ int main(int argc, char **argv)
                 // Le client a t-il fait une requête "GET maps/list" ?
                 if (strncmp("GET maps/list", buffer, strlen("GET maps/list")) == 0)
                 {
-                    char *jsonResponse = malloc(MAX_JSON_SIZE * sizeof(char));
-                    char response[MAX_JSON_SIZE + 1];
+                    char *jsonResponse = malloc(GET_QUERY_RESPONSE_SIZE * sizeof(char));
+                    char response[GET_QUERY_RESPONSE_SIZE + 1];
                     queryGetMapsList responseToGetMapsList;
                     
                     jsonResponse = getResponseInJSON(&responseToGetMapsList);
-                    response[MAX_JSON_SIZE] = '\0';
+                    response[GET_QUERY_RESPONSE_SIZE] = '\0';
                     strcpy(response, jsonResponse);
                     // strcat(response, buffer);
+
+                    // Libère la mémoire allouée 
+                    free(jsonResponse);
 
                     if (sendto(fdsocket, response, strlen(response), MSG_DONTWAIT,
                                (struct sockaddr *)&clients.list[pos].addr, addrLen) < 0)
@@ -129,13 +132,25 @@ int main(int argc, char **argv)
                 }
                 else
                 {
-                    char response[] = "Bad Request !\n";
-                    if (sendto(fdsocket, response, strlen(response), MSG_DONTWAIT,
-                               (struct sockaddr *)&clients.list[pos].addr, addrLen) < 0)
+                    // char response[] = "Bad Request !\n"; // or Unknown Error !
+
+                    int checkSend = -1;
+                    char *response = malloc(ERR_MSG_SIZE * sizeof(char));
+
+                    response = getErrorMessage(false);
+                    checkSend = sendto(fdsocket, response, strlen(response), MSG_DONTWAIT,
+                               (struct sockaddr *)&clients.list[pos].addr, addrLen);
+
+                    // Libère la mémoire allouée 
+                    free(response);
+
+                    if (checkSend < 0)
                     {
                         perror("Problème à l'envoie");
                         exit(EXIT_FAILURE);
                     }
+
+                    // when it should be "Unknown Error !"?
                 }
             }
         }

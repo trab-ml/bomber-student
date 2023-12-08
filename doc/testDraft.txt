@@ -1,22 +1,6 @@
-BONNES PRATIQUES
- + https://users.ece.cmu.edu/~eno/coding/CCodingStandard.html
- + https://sourceware.org/gdb/current/onlinedocs/gdb#Running
- + https://valgrind.org/docs/manual/manual-core-adv.html#manual-core-adv.gdbserver-simple
-        [SERVER]
-                + For Debugging
-                gdb ./bin/main 
-                (gdb) run 49151
-                ./bin/main 4915
-
-                + For Memory Analysis
-                // -v --> verbose
-                // valgrind --vgdb=yes --vgdb-error=0 ./bin/main 49151
-                // valgrind --leak-check=full ./bin/main 49151
-                valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./bin/main 49151
-
-        [CLIENT]
-                nc -u localhost 49151
-                ...
+TESTER
+chmod +x run.sh
+./run.sh
 
 DEPENDANCES
  + cJSON https://github.com/DaveGamble/cJSON 
@@ -121,3 +105,23 @@ GHOST
         "statut":       400,
         "message":      "Bad request"
 }
+
+BONNES PRATIQUES
+ + https://users.ece.cmu.edu/~eno/coding/CCodingStandard.html
+ + https://sourceware.org/gdb/current/onlinedocs/gdb#Running
+ + https://valgrind.org/docs/manual/manual-core-adv.html#manual-core-adv.gdbserver-simple
+        [SERVER]
+                + For Debugging
+                gdb ./bin/main 
+                (gdb) run 49151
+                ./bin/main 4915
+
+                + For Memory Analysis
+                // -v --> verbose
+                // valgrind --vgdb=yes --vgdb-error=0 ./bin/main 49151
+                // valgrind --leak-check=full ./bin/main 49151
+                valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./bin/main 49151
+
+        [CLIENT]
+                nc -u localhost 49151
+                ...

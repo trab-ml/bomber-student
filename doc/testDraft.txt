@@ -9,8 +9,8 @@ $ ./run.sh
 DEPENDANCES
  + cJSON https://github.com/DaveGamble/cJSON 
 
-nc -u server_addr 49151 
-nc -u localhost 49151
+nc server_addr 49151 
+nc localhost 49151
 
 STRUCTURE DU PROJET
 bomber-student/
@@ -28,48 +28,23 @@ bomber-student/
 |-- Makefile
 |-- README.md
 
+
+COMING SOON
++ Gérer "2 successives Get err"
+
 + Créer un serveur permettant à des clients de se connecter
     + Le premier msg du client constitue son login (qui sera stocké par le serveur comme tel.)
     + A une requête "GET maps/list" du client, le serveur enverra le JSON correspondant.
         + Le serveur doit être capable de sérialiser/désérialiser du JSON (cJSON)
-    
-    
-+ Tester avec nc -u localhost 49151 (en créant 2 clients (2 terminaux) )
-($ ./bin/main 49151)
-[SERVER] Receive 127.0.0.1:49238
-[SERVER] Add a new client to the list 127.0.0.1:49238, his login is CLIENT2
-[SERVER] Receive 127.0.0.1:49238
-response = JSON responseGET maps/list
-[SERVER] Receive 127.0.0.1:49238
-
-
-[CLIENT2]
-$ nc -u localhost 49151
-CLIENT2
- GET maps/list
-JSON responseGET maps/list
-GET map/list     
-Bad Request !
-
-+ buffer[len - 1] = '\0'; (inutile)
- recvfrom ne remplit pas le caractère nul à la fin de la chaîne.
 
 + Proprement initialiser la var response avec la taille nécessaire
 max size of jsonResponse = 399; // Don't forget '\0' => needed size = 400
 
-+ Retourner le JSON correspondant au lieu de "JSON responseGET maps/list"
- // properly init the buffer
- // generate the JSON by passing an object of an instance of queryGetMapsList
- // cpy the generated response into the buffer
- // send it to the client 
-[REACHED]
-
-+ Spécifier le protocole utiliser somewhere in docs/
++ Spécifier le protocole utilisé somewhere in docs/
  (comment il fctn? connex/déconnex? requêtes/réponse?)
 
 + Implémenter la réponse correspondante à "GET game/list"
  + une nouvelle struct (qui stoquera les différentes parties? (une autre pour) l'état des jeux?) ? 
-
 
 + Implémenter la réponse aux req. érronées
 
@@ -85,15 +60,30 @@ max size of jsonResponse = 399; // Don't forget '\0' => needed size = 400
 CURRENT STATE OF main.c
 ---------------------------------------------------------------------------------------
 [SERVER]
-$ ./bin/main 49151
-[SERVER] Receive 127.0.0.1:40936
-[SERVER] Add a new client to the list 127.0.0.1:40936, his login is GHOST
-[SERVER] Receive 127.0.0.1:40936
+$ make; bin/main 49151
+gcc -Wall -Werror -g -Iinclude -c -o bin/server_utils.o src/server_utils.c
+gcc -Wall -Werror -g -o bin/main bin/cJSON.o bin/client_list.o bin/main.o bin/server_utils.o bin/socket_utils.o bin/test_cJSON.o
+[SERVER] Nouvelle connexion de 127.0.0.1:33628
+[SERVER] Message reçu de 127.0.0.1:33628
+[SERVER] Ajout d'un client à la liste 127.0.0.1:33628, son login est TRATRA
+
+[SERVER] Message reçu de 127.0.0.1:33628
+[SERVER] Message reçu de 127.0.0.1:33628
+[SERVER] Message reçu de 127.0.0.1:33628
+Erreur de segmentation (core dumped)
 
 [CLIENT] 
-$ nc -u localhost 49151
-GHOST
- GET maps/list
+$ nc localhost 49151
+TRATRA
+GET maps
+{
+        "statut":       400,
+        "message":      "Bad request"
+}GET maps/l
+{
+        "statut":       400,
+        "message":      "Bad request"
+}GET maps/list
 {
         "action":       "maps/list",
         "statut":       "200",
@@ -105,14 +95,8 @@ GHOST
                         "height":       8,
                         "content":      "************************=----------------------==----==============----==----------****--------==------****------------==----==============----==----------------------=************************"
                 }]
-}
+}GET maps/list
 
-GHOST
- GET map/lists
-{
-        "statut":       400,
-        "message":      "Bad request"
-}
 
 BONNES PRATIQUES
  + https://users.ece.cmu.edu/~eno/coding/CCodingStandard.html

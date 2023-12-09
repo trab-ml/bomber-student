@@ -12,7 +12,7 @@ const unsigned int CLIENT_BLOC_SIZE = 1024;
 
 void addClient(clientList *clients, struct sockaddr_in addr, const char *login, int client_socket)
 {
-    printf("[SERVER] Add a new client to the list %s:%i, his login is %s\n",
+    printf("[SERVER] Ajout d'un client à la liste %s:%i, son login est %s\n",
            inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), login);
 
     if (clients->size >= clients->capacity)

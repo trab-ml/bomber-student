@@ -15,5 +15,6 @@ int main(int argc, char **argv)
 
     startServer(server_socket, &clients);
 
-    return EXIT_SUCCESS;
+    // On ne devrait jamais arriver ici
+    return EXIT_FAILURE;
 }

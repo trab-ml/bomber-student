@@ -10,7 +10,6 @@
 #include "test_cJSON.h"
 #include "server_utils.h"
 
-
 void handleError(const char *message)
 {
     perror(message);
@@ -41,8 +40,6 @@ void startServer(int server_socket, clientList *clients)
         printf("[SERVER] Nouvelle connexion de %s:%i\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
 
         handleNewConnection(client_socket, &client_address, clients);
-
-        // Suppression des clients inactifs
         handleInactiveClients(clients);
     }
 }
@@ -65,7 +62,6 @@ void handleNewConnection(int client_socket, struct sockaddr_in *client_address, 
         printf("[SERVER] Message reçu de %s:%i\n", inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port));
 
         unsigned pos = findClient(client_address, clients);
-
         if (pos >= clients->size)
         {
             if (len < 2 || len + 1 >= SERVER_MAX_SIZE_LOGIN)
@@ -81,9 +77,6 @@ void handleNewConnection(int client_socket, struct sockaddr_in *client_address, 
         {
             buffer[len] = '\0';
             clients->list[pos].lastActivityTime = time(NULL);
-
-            printf("Processing Client Msg\n");
-
             processClientMessage(client_socket, buffer, clients);
         }
     }
@@ -95,53 +88,49 @@ void handleNewConnection(int client_socket, struct sockaddr_in *client_address, 
  * @param buffer Message reçu
  * @param clients Liste des clients connectés
  * @return void
-*/
+ */
 void processClientMessage(int client_socket, const char *buffer, clientList *clients)
 {
     if (strncmp("GET maps/list", buffer, strlen("GET maps/list")) == 0)
     {
-        char *jsonResponse = malloc(GET_QUERY_RESPONSE_SIZE * sizeof(char));
         char response[GET_QUERY_RESPONSE_SIZE + 1];
         queryGetMapsList responseToGetMapsList;
+        char *jsonResponse = getResponseInJSON(&responseToGetMapsList);
 
-        jsonResponse = getResponseInJSON(&responseToGetMapsList);
+        strncpy(response, jsonResponse, GET_QUERY_RESPONSE_SIZE);
         response[GET_QUERY_RESPONSE_SIZE] = '\0';
-        strcpy(response, jsonResponse);
-
-        free(jsonResponse);
         sendMessage(client_socket, response);
     }
     else if (strncmp("DISC", buffer, strlen("DISC")) == 0)
     {
         unsigned pos = findClientBySocket(client_socket, clients);
-
         if (pos < clients->size)
         {
-            // Envoie le message de déconnexion
             sendMessage(client_socket, "Disconnected");
-            
-            // Ferme le socket client
+
             if (close(client_socket) != 0)
             {
                 handleError("Problème lors de la fermeture du socket client");
                 exit(EXIT_FAILURE);
             }
-
-            // Supprime le client de la liste
             clients->list[pos] = clients->list[--clients->size];
         }
     }
     else
     {
-        sendMessage(client_socket, "Received your message\n");
+        char *response = malloc(ERR_MSG_SIZE * sizeof(char));
+        response = getErrorMessage(false);
+
+        sendMessage(client_socket, response);
+        free(response);
     }
 }
 
 /**
- * @brief Supprime les clients inactifs de la liste en se réferant à la valeur de lastActivityTime
+ * @brief Supprime les clients inactifs en se réferant à la valeur de lastActivityTime
  * @param clients Liste des clients connectés
  * @return void
-*/
+ */
 void handleInactiveClients(clientList *clients)
 {
     unsigned i = 0;

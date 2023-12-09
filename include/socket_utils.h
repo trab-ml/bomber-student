@@ -3,6 +3,6 @@
 
 #include <arpa/inet.h>
 
-int initSocket(int port);
+int initTCPServerSocket(int port);
 
 #endif

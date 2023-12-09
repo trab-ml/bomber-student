@@ -33,4 +33,4 @@ open_terminal() {
 open_terminal ./bin/main 49151
 
 # Ouvre un autre terminal et exécute nc sur localhost 49151
-open_terminal nc -u localhost 49151
+open_terminal nc localhost 49151

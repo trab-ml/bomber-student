@@ -1,7 +1,9 @@
+// client_list.h
 #ifndef CLIENT_LIST_H
 #define CLIENT_LIST_H
 
 #include <netinet/in.h>
+#include <time.h>
 
 #define SERVER_MAX_SIZE_LOGIN 10
 
@@ -14,7 +16,8 @@ extern const unsigned int CLIENT_BLOC_SIZE;
 typedef struct {
     struct sockaddr_in addr;
     char login[SERVER_MAX_SIZE_LOGIN];
-    unsigned counter;
+    int client_socket;
+    time_t lastActivityTime;
 } clientInfo;
 
 // Liste des clients
@@ -24,6 +27,8 @@ typedef struct {
     unsigned int size;
 } clientList;
 
-void addClient(clientList *clients, struct sockaddr_in addr, char *login);
+void addClient(clientList *clients, const struct sockaddr_in client_address, const char *login, int client_socket);
+unsigned findClient(const struct sockaddr_in *client_address, const clientList *clients);
+unsigned findClientBySocket(int client_socket, const clientList *clients);
 
 #endif

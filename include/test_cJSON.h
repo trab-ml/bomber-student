@@ -40,7 +40,7 @@ int initGetResponse(queryGetMapsList *database);
 // Ajoute une map à la liste de map
 int addMap(queryGetMapsList *database, mapData map);
 
-// Libère la mémoire occupée de la liste de maps
+// Libère la mémoire occupée par la liste de maps
 void freeMapsData(mapsData *mapList);
 
 char *getResponseInJSON(queryGetMapsList *responseToGetMapsList);

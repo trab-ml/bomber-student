@@ -5,67 +5,73 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-// #include "test_cJSON.c"
 #include "test_cJSON.h"
 #include "socket_utils.h"
 #include "client_list.h"
 #include "server_utils.h"
 
-// flag statique pour savoir si l'initialisation a été faite
-static int initialized = 0;
+// Global flag to track initialization status
+int initialized = 0;
 
 void handleError(const char *message)
 {
     perror(message);
+    exit(EXIT_FAILURE);
 }
 
 void sendMessage(int client_socket, const char *message)
 {
     if (send(client_socket, message, strlen(message), 0) < 0)
     {
-        handleError("Problème à l'envoi");
+        handleError("Failed to send message");
     }
 }
 
 /**
- * @brief Fais tourner le serveur
- * @param server_socket Socket du serveur
- * @param clients Liste des clients connectés
-*/
-void startServer(int server_socket, clientList *clients)
+ * @brief Starts the server and handles all incoming connections
+ * @param server_socket Socket of the server
+ * @param clients List of connected clients
+ */
+void runServer(int server_socket, clientList *clients)
 {
     struct sockaddr_in client_address;
     socklen_t addr_len = sizeof(client_address);
 
-    while (1)
+    while (true)
     {
         int client_socket = accept(server_socket, (struct sockaddr *)&client_address, &addr_len);
-        if (client_socket == -1)
+        if (client_socket < 0)
         {
-            handleError("Problème lors de l'acceptation de la connexion");
+            handleError("Failed to accept connection");
             exit(EXIT_FAILURE);
         }
 
-        printf("[SERVER] Nouvelle connexion de %s:%i\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
+        printf("[SERVER] New connection from %s:%i\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
 
-        handleNewConnection(client_socket, &client_address, clients);
+        handleNewClient(client_socket, &client_address, clients);
         handleInactiveClients(clients);
     }
 }
 
-void handleNewConnection(int client_socket, struct sockaddr_in *client_address, clientList *clients)
+/**
+ * @brief Handles a new client connection by reading messages and processing them
+ * @param client_socket Socket of the client
+ * @param client_address Address of the client
+ * @param clients List of connected clients
+ */
+void handleNewClient(int client_socket, struct sockaddr_in *client_address, clientList *clients)
 {
     char buffer[BUFFER_LEN + 1];
-    while (1)
+    while (true)
     {
-        memset(buffer, 0, sizeof(buffer)); // Vide le buffer
+        memset(buffer, 0, sizeof(buffer)); // Empty the buffer
         int len = recv(client_socket, buffer, BUFFER_LEN, 0);
         buffer[len] = '\0';
 
         if (len <= 0)
         {
-            // Connexion fermée ou erreur lors de la réception
-            printf("[SERVER] Connexion fermée ou erreur de réception par le client %s:%i\n", inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port));
+            // Connection closed or error during receiving
+            printf("[SERVER] Connection closed or receiving error from client %s:%i\n", inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port));
             close(client_socket);
             return;
         }
@@ -73,8 +79,14 @@ void handleNewConnection(int client_socket, struct sockaddr_in *client_address, 
         printf("[SERVER] Message reçu de %s:%i\n", inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port));
 
         unsigned pos = findClient(client_address, clients);
-        if (pos >= clients->size)
+        if (pos < clients->size)
         {
+            clients->list[pos].lastActivityTime = time(NULL);
+            processClientMessage(client_socket, buffer, clients);
+        }
+        else
+        {
+            // Handle new client registration
             if (len < 2 || len + 1 >= SERVER_MAX_SIZE_LOGIN)
             {
                 sendMessage(client_socket, "KO");
@@ -84,19 +96,14 @@ void handleNewConnection(int client_socket, struct sockaddr_in *client_address, 
                 addClient(clients, *client_address, buffer, client_socket);
             }
         }
-        else
-        {
-            clients->list[pos].lastActivityTime = time(NULL);
-            processClientMessage(client_socket, buffer, clients);
-        }
     }
 }
 
 /**
- * @brief Traite le message reçu du client
- * @param client_socket Socket du client
- * @param buffer Message reçu
- * @param clients Liste des clients connectés
+ * @brief Processes the received client message based on its content
+ * @param client_socket Socket of the client
+ * @param buffer Received message
+ * @param clients List of connected clients
  * @return void
  */
 void processClientMessage(int client_socket, const char *buffer, clientList *clients)
@@ -146,10 +153,10 @@ void processClientMessage(int client_socket, const char *buffer, clientList *cli
 }
 
 /**
- * @brief Supprime les clients inactifs en se réferant à la valeur de lastActivityTime
- * @param clients Liste des clients connectés
+ * @brief Deletes inactive clients by referring to the value of lastActivityTime
+ * @param clients List of connected clients
  * @return void
- */
+*/
 void handleInactiveClients(clientList *clients)
 {
     unsigned i = 0;

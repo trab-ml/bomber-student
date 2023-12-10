@@ -7,8 +7,8 @@
 
 void handleError(const char *message);
 void sendMessage(int client_socket, const char *message);
-void startServer(int server_socket, clientList *clients);
-void handleNewConnection(int client_socket, struct sockaddr_in *client_address, clientList *clients);
+void runServer(int server_socket, clientList *clients);
+void handleNewClient(int client_socket, struct sockaddr_in *client_address, clientList *clients);
 void processClientMessage(int client_socket, const char *buffer, clientList *clients);
 void handleInactiveClients(clientList *clients);
 

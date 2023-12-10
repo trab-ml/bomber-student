@@ -7,9 +7,12 @@
 
 int main(int argc, char **argv)
 {
-    assert(argc == 2);
-    int port = atoi(argv[1]);
+    if (argc != 2) {
+        printf("Usage: %s <port>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
 
+    int port = atoi(argv[1]);
     int server_socket = initTCPServerSocket(port);
     clientList clients = {NULL, 0, 0};
 

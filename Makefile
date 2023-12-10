@@ -31,6 +31,11 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
-# Règle de nettoyage
 clean:
 	rm -rf $(OBJ_DIR)/*
+
+debug:
+	@echo "Source files: $(SRC)"
+	@echo "Object files: $(OBJ)"
+	@echo "Target: $(TARGET)"
+	@echo "Include path: $(INC)"

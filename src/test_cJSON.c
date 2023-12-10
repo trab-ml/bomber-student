@@ -3,61 +3,58 @@
 #include <string.h>
 #include "test_cJSON.h"
 
-// gcc src/test_cJSON.c src/cJSON.c -Iinclude -o bin/test_cJSON
-
-/**
- * @brief Initialise la base de données
- * @param database Pointeur vers la structure de données de la base
- * @return 0 en cas de succès, 1 en cas d'échec
- */
 int initGetResponse(queryGetMapsList *database)
 {
-    // Initialise des valeurs de la base de données
-    database->action = "maps/list";
-    database->statut = "200";
-    database->message = "ok";
-    database->nbMapsList = 1;
+    database->mapList.list = malloc(INITIAL_CAPACITY * sizeof(mapData));
+    if (database->mapList.list == NULL)
+    {
+        perror("Memory allocation failed");
+        return 1;
+    }
 
-    // Crée une structure de mapData
-    mapData map = {0, 24, 8, "************************"
-                             "=----------------------="
-                             "=----==============----="
-                             "=----------****--------="
-                             "=------****------------="
-                             "=----==============----="
-                             "=----------------------="
-                             "************************"};
+    database->mapList.capacity = INITIAL_CAPACITY;
+    database->mapList.size = 0;
+    const char *action = "maps/list";
+    const char *statut = "200";
+    const char *message = "ok";
+    int nbMapsList = 1;
+
+    mapData map = {0, 24, 8, strdup("************************"
+                                    "=----------------------="
+                                    "=----==============----="
+                                    "=----------****--------="
+                                    "=------****------------="
+                                    "=----==============----="
+                                    "=----------------------="
+                                    "************************")};
 
     if (!addMap(database, map))
     {
-        perror("Échec d'ajout de la map");
+        perror("Failed to add map");
         freeMapsData(&(database->mapList));
         return 1;
     }
 
+    database->action = strdup(action);
+    database->statut = strdup(statut);
+    database->message = strdup(message);
+    database->nbMapsList = nbMapsList;
+
     return 0;
 }
 
-/**
- * @brief Ajoute une map à la liste de maps
- * @param database Pointeur vers la structure de données de la base
- * @param map Structure de mapData à ajouter
- * @return 0 en cas de succès, 1 en cas d'échec
- */
 int addMap(queryGetMapsList *database, mapData map)
 {
     if (database->mapList.size >= database->mapList.capacity)
     {
-        database->mapList.capacity += 10;
-        mapData *newList = (mapData *)realloc(database->mapList.list, database->mapList.capacity * sizeof(mapData));
-        if (!newList)
+        database->mapList.capacity += INITIAL_CAPACITY;
+        mapData *newList = realloc(database->mapList.list, database->mapList.capacity * sizeof(mapData));
+        if (newList == NULL)
         {
-            perror("Erreur realloc");
+            perror("Memory reallocation failed");
             return 0;
         }
         database->mapList.list = newList;
-
-        free(newList);
     }
 
     database->mapList.list[database->mapList.size] = map;
@@ -66,15 +63,11 @@ int addMap(queryGetMapsList *database, mapData map)
     return 1;
 }
 
-/**
- * @brief Libère les données de la liste de maps
- * @param mapList Pointeur vers les données à libérer
- */
 void freeMapsData(mapsData *mapList)
 {
     if (mapList->list)
     {
-        for (unsigned int i = 0; i < mapList->size; i++)
+        for (size_t i = 0; i < mapList->size; i++)
         {
             free(mapList->list[i].content);
         }
@@ -82,32 +75,22 @@ void freeMapsData(mapsData *mapList)
     }
 }
 
-/**
- * @brief Crée le JSON correspondant à une structure de donnée de type queryGetMapsList
- * @param database structure de type queryGetMapsList contenant les données
- * @return pointeur de chaîne de caractères contenant le JSON
-*/
 char *parseInJSON(queryGetMapsList *database)
 {
-    // Crée un objet cJSON pour représenter le JSON
     cJSON *root = cJSON_CreateObject();
     if (root == NULL)
     {
-        printf("Erreur lors de la désérialisation du JSON.\n");
+        printf("Error creating JSON object.\n");
         return NULL;
     }
 
-    // Ajoute les éléments au JSON en utilisant les données de database
     cJSON_AddStringToObject(root, "action", database->action);
     cJSON_AddStringToObject(root, "statut", database->statut);
     cJSON_AddStringToObject(root, "message", database->message);
     cJSON_AddNumberToObject(root, "nbMapsList", database->nbMapsList);
 
-    // Crée un tableau pour les objets "maps"
     cJSON *mapsArray = cJSON_CreateArray();
-
-    // Ajoute chaque mapData à l'array
-    for (unsigned int i = 0; i < database->mapList.size; i++)
+    for (size_t i = 0; i < database->mapList.size; i++)
     {
         cJSON *mapObject = cJSON_CreateObject();
         cJSON_AddNumberToObject(mapObject, "id", database->mapList.list[i].id);
@@ -119,10 +102,7 @@ char *parseInJSON(queryGetMapsList *database)
 
     cJSON_AddItemToObject(root, "maps", mapsArray);
 
-    // Convertit l'objet cJSON en une chaîne JSON
     char *jsonStr = cJSON_Print(root);
-
-    // Libère la mémoire allouée par cJSON
     cJSON_Delete(root);
 
     return jsonStr;
@@ -134,15 +114,7 @@ char *parseInJSON(queryGetMapsList *database)
  * @return 0 en cas de succès
 */
 char *getResponseInJSON(queryGetMapsList *responseToGetMapsList) {
-    // Crée et initialise une structure représentant une réponse de requête
-    initGetResponse(responseToGetMapsList);
-
-    // Convertit les données cJSON de la stuct responseToGetMapsList en JSON.
     char *jsonStr = parseInJSON(responseToGetMapsList);
-
-    // Affiche la chaîne JSON résultante.
-    // printf("%s\n", jsonStr);
-
     return jsonStr;
 }
 
@@ -182,5 +154,3 @@ char *getErrorMessage(bool unknowErr) {
 
     return jsonStr;
 }
-
-// char response[] = getErrorMessage(true); 

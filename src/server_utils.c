@@ -5,10 +5,14 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+// #include "test_cJSON.c"
+#include "test_cJSON.h"
 #include "socket_utils.h"
 #include "client_list.h"
-#include "test_cJSON.h"
 #include "server_utils.h"
+
+// flag statique pour savoir si l'initialisation a été faite
+static int initialized = 0;
 
 void handleError(const char *message)
 {
@@ -46,10 +50,12 @@ void startServer(int server_socket, clientList *clients)
 
 void handleNewConnection(int client_socket, struct sockaddr_in *client_address, clientList *clients)
 {
+    char buffer[BUFFER_LEN + 1];
     while (1)
     {
-        char buffer[BUFFER_LEN + 1];
+        memset(buffer, 0, sizeof(buffer)); // Vide le buffer
         int len = recv(client_socket, buffer, BUFFER_LEN, 0);
+        buffer[len] = '\0';
 
         if (len <= 0)
         {
@@ -75,7 +81,6 @@ void handleNewConnection(int client_socket, struct sockaddr_in *client_address, 
         }
         else
         {
-            buffer[len] = '\0';
             clients->list[pos].lastActivityTime = time(NULL);
             processClientMessage(client_socket, buffer, clients);
         }
@@ -95,6 +100,17 @@ void processClientMessage(int client_socket, const char *buffer, clientList *cli
     {
         char response[GET_QUERY_RESPONSE_SIZE + 1];
         queryGetMapsList responseToGetMapsList;
+
+        if (!initialized)
+        {
+            if (initGetResponse(&responseToGetMapsList) != 0)
+            {
+                fprintf(stderr, "Initialization failed\n");
+                exit(EXIT_FAILURE);
+            }
+            initialized = 1;
+        }
+
         char *jsonResponse = getResponseInJSON(&responseToGetMapsList);
 
         strncpy(response, jsonResponse, GET_QUERY_RESPONSE_SIZE);
@@ -118,9 +134,7 @@ void processClientMessage(int client_socket, const char *buffer, clientList *cli
     }
     else
     {
-        char *response = malloc(ERR_MSG_SIZE * sizeof(char));
-        response = getErrorMessage(false);
-
+        char *response = getErrorMessage(false);
         sendMessage(client_socket, response);
         free(response);
     }

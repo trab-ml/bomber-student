@@ -106,7 +106,7 @@ BONNES PRATIQUES
                 + For Debugging
                 gdb ./bin/main 
                 (gdb) run 49151
-                ./bin/main 4915
+                ./bin/main 49151
 
                 + For Memory Analysis
                 // -v --> verbose

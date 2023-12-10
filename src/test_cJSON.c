@@ -3,6 +3,11 @@
 #include <string.h>
 #include "test_cJSON.h"
 
+/**
+ * @brief initialise la réponse JSON correspondante à la requête "GET maps/list"
+ * @param database la structure contenant les infos à convertir en JSON
+ * @return 0 en cas de succès
+*/
 int initGetResponse(queryGetMapsList *database)
 {
     database->mapList.list = malloc(INITIAL_CAPACITY * sizeof(mapData));
@@ -43,6 +48,12 @@ int initGetResponse(queryGetMapsList *database)
     return 0;
 }
 
+/**
+ * @brief ajoute une map à la liste des maps
+ * @param database la structure contenant les infos à convertir en JSON
+ * @param map la map à ajouter
+ * @return 1 en cas de succès
+*/
 int addMap(queryGetMapsList *database, mapData map)
 {
     if (database->mapList.size >= database->mapList.capacity)
@@ -63,6 +74,11 @@ int addMap(queryGetMapsList *database, mapData map)
     return 1;
 }
 
+/**
+ * @brief libère la mémoire allouée à la liste des maps
+ * @param mapList la liste des maps
+ * @return void
+*/
 void freeMapsData(mapsData *mapList)
 {
     if (mapList->list)
@@ -75,6 +91,11 @@ void freeMapsData(mapsData *mapList)
     }
 }
 
+/**
+ * @brief convertit la structure contenant les infos à convertir en JSON
+ * @param database la structure contenant les infos à convertir en JSON
+ * @return le JSON correspondant à la structure
+*/
 char *parseInJSON(queryGetMapsList *database)
 {
     cJSON *root = cJSON_CreateObject();

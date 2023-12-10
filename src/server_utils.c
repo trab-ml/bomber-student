@@ -27,6 +27,11 @@ void sendMessage(int client_socket, const char *message)
     }
 }
 
+/**
+ * @brief Fais tourner le serveur
+ * @param server_socket Socket du serveur
+ * @param clients Liste des clients connectés
+*/
 void startServer(int server_socket, clientList *clients)
 {
     struct sockaddr_in client_address;

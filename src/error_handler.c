@@ -19,6 +19,11 @@ void handleFailedConnection(ErrorCode error)
 //     exit(EXIT_FAILURE);
 // }
 
+/**
+ * @brief get the error message from the error code
+ * @param error the error code
+ * @return the error message
+*/
 const char *getErrorMessage(ErrorCode error)
 {
     switch (error)

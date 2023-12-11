@@ -4,22 +4,23 @@
 #include <netinet/in.h>
 #include <time.h>
 
-#define SERVER_MAX_SIZE_LOGIN 10
+// Maximum length of a login
+#define MAX_LOGIN_LEN 20
 
 extern const unsigned int BACKLOG;
 extern const unsigned int BUFFER_LEN;
 extern const unsigned int MAX_MISS;
 extern const unsigned int CLIENT_BLOC_SIZE;
 
-// Infos d'un client
+// Client info
 typedef struct {
     struct sockaddr_in addr;
-    char login[SERVER_MAX_SIZE_LOGIN];
+    char login[MAX_LOGIN_LEN];
     int client_socket;
     time_t lastActivityTime;
 } clientInfo;
 
-// Liste des clients
+// List of clients
 typedef struct {
     clientInfo *list;
     unsigned int capacity;

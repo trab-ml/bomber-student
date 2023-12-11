@@ -11,6 +11,11 @@ const unsigned int BUFFER_LEN = 1024;
 const unsigned int MAX_MISS = 128;
 const unsigned int CLIENT_BLOC_SIZE = 1024;
 
+/**
+ * @brief initialise the list of clients
+ * @param clients the list of clients
+ * @return void
+ */
 void addClient(clientList *clients, struct sockaddr_in addr, const char *login, int client_socket)
 {
     printf("[SERVER] Add client to clients list %s:%i, his login is %s\n",
@@ -32,11 +37,18 @@ void addClient(clientList *clients, struct sockaddr_in addr, const char *login, 
 
     clients->list[clients->size].addr = addr;
     clients->list[clients->size].client_socket = client_socket;
-    strcpy(clients->list[clients->size].login, login);
+    strncpy(clients->list[clients->size].login, login, MAX_LOGIN_LEN - 1);
+    clients->list[clients->size].login[MAX_LOGIN_LEN - 1] = '\0';
     clients->list[clients->size].lastActivityTime = time(NULL);
     clients->size++;
 }
 
+/**
+ * @brief find a client in the list of clients
+ * @param client_address the address of the client to find
+ * @param clients the list of clients
+ * @return the index of the client in the list, or the size of the list if the client is not found
+ */
 unsigned findClient(const struct sockaddr_in *client_address, const clientList *clients)
 {
     for (unsigned i = 0; i < clients->size; i++)
@@ -50,6 +62,12 @@ unsigned findClient(const struct sockaddr_in *client_address, const clientList *
     return clients->size;
 }
 
+/**
+ * @brief find a client (by it's socket) in the list of clients
+ * @param client_socket the socket of the client to find
+ * @param clients the list of clients
+ * @return the index of the client in the list, or the size of the list if the client is not found
+ */
 unsigned findClientBySocket(int client_socket, const clientList *clients)
 {
     for (unsigned i = 0; i < clients->size; i++)

@@ -64,7 +64,6 @@ void handleNewClient(int client_socket, struct sockaddr_in *client_address, clie
 
         if (len <= 0)
         {
-            // Connection closed or error during receiving
             printf("[SERVER] Connection closed or receiving error from client %s:%i\n", inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port));
             close(client_socket);
             return;

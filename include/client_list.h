@@ -1,4 +1,3 @@
-// client_list.h
 #ifndef CLIENT_LIST_H
 #define CLIENT_LIST_H
 

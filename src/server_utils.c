@@ -9,21 +9,16 @@
 #include "socket_utils.h"
 #include "client_list.h"
 #include "server_utils.h"
+#include "error_handler.h"
 
 // Global flag to track initialization status
 int initialized = 0;
-
-void handleError(const char *message)
-{
-    perror(message);
-    exit(EXIT_FAILURE);
-}
 
 void sendMessage(int client_socket, const char *message)
 {
     if (send(client_socket, message, strlen(message), 0) < 0)
     {
-        handleError("Failed to send message");
+       handleError(SOCKET_SEND_ERROR);
     }
 }
 
@@ -42,8 +37,7 @@ void runServer(int server_socket, clientList *clients)
         int client_socket = accept(server_socket, (struct sockaddr *)&client_address, &addr_len);
         if (client_socket < 0)
         {
-            handleError("Failed to accept connection");
-            exit(EXIT_FAILURE);
+            handleError(ACCEPT_ERROR);
         }
 
         printf("[SERVER] New connection from %s:%i\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
@@ -115,11 +109,7 @@ void processClientMessage(int client_socket, const char *buffer, clientList *cli
 
         if (!initialized)
         {
-            if (initGetResponse(&responseToGetMapsList) != 0)
-            {
-                fprintf(stderr, "Initialization failed\n");
-                exit(EXIT_FAILURE);
-            }
+            initGetResponse(&responseToGetMapsList);
             initialized = 1;
         }
 
@@ -138,15 +128,14 @@ void processClientMessage(int client_socket, const char *buffer, clientList *cli
 
             if (close(client_socket) != 0)
             {
-                handleError("Problème lors de la fermeture du socket client");
-                exit(EXIT_FAILURE);
+                handleError(SOCKET_CLOSE_ERROR);
             }
             clients->list[pos] = clients->list[--clients->size];
         }
     }
     else
     {
-        char *response = getErrorMessage(false);
+        char *response = getQueryErrorMessage(false);
         sendMessage(client_socket, response);
         free(response);
     }
@@ -166,8 +155,7 @@ void handleInactiveClients(clientList *clients)
         {
             if (close(clients->list[i].client_socket) != 0)
             {
-                handleError("Problème lors de la fermeture du socket client");
-                exit(EXIT_FAILURE);
+                handleError(SOCKET_CLOSE_ERROR);
             }
 
             clients->list[i] = clients->list[--clients->size];

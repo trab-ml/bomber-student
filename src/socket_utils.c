@@ -7,29 +7,27 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include "socket_utils.h"
+#include "error_handler.h"
 
 #define BACKLOG 5
 
 /**
- * @brief Initialise un socket.
- *
- * @param port est le port utilisé.
- * @return la file descriptor.
+ * @brief Initialise a TCP server socket.
+ * @param port is the port to use.
+ * @return the file descriptor.
  */
 int initTCPServerSocket(int port)
 {
     int server_socket;
     if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
-        perror("Échec de création du socket");
-        exit(EXIT_FAILURE);
+        handleError(SOCKET_CREATION_ERROR);
     }
 
     int opt = 1;
     if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) != 0)
     {
-        perror("Échec de paramétrage du socket");
-        exit(EXIT_FAILURE);
+        handleError(SETSOCKOPT_ERROR);
     }
 
     struct sockaddr_in server_address;
@@ -40,14 +38,12 @@ int initTCPServerSocket(int port)
 
     if (bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) != 0)
     {
-        perror("Échec d'attachement au port");
-        exit(EXIT_FAILURE);
+        handleError(BIND_ERROR);
     }
 
     if (listen(server_socket, BACKLOG) != 0)
     {
-        perror("Échec de configuration du backlog");
-        exit(EXIT_FAILURE);
+        handleError(LISTEN_ERROR);
     }
 
     return server_socket;

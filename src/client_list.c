@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include "client_list.h"
+#include "error_handler.h"
 
 const unsigned int BACKLOG = 7;
 const unsigned int BUFFER_LEN = 1024;
@@ -12,7 +13,7 @@ const unsigned int CLIENT_BLOC_SIZE = 1024;
 
 void addClient(clientList *clients, struct sockaddr_in addr, const char *login, int client_socket)
 {
-    printf("[SERVER] Ajout d'un client à la liste %s:%i, son login est %s\n",
+    printf("[SERVER] Add client to clients list %s:%i, his login is %s\n",
            inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), login);
 
     if (clients->size >= clients->capacity)
@@ -23,8 +24,7 @@ void addClient(clientList *clients, struct sockaddr_in addr, const char *login, 
 
         if (!newList)
         {
-            perror("Erreur realloc");
-            exit(EXIT_FAILURE);
+            handleError(REALLOC_ERROR);
         }
 
         clients->list = newList;

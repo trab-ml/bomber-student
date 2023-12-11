@@ -3,9 +3,8 @@
 
 #define SERVER_MAX_SIZE_LOGIN 10
 #define WELCOME_MESSAGE "Dites bonjour à "
-#define INACTIVITY_TIMEOUT_SECONDS 60 * 10 // Temps d'inactivité autorisé (en secondes)
+#define INACTIVITY_TIMEOUT_SECONDS 60 * 10 // inactivity timeout of 10 minutes
 
-void handleError(const char *message);
 void sendMessage(int client_socket, const char *message);
 void runServer(int server_socket, clientList *clients);
 void handleNewClient(int client_socket, struct sockaddr_in *client_address, clientList *clients);

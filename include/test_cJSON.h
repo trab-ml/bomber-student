@@ -33,11 +33,11 @@ typedef struct {
     char *message;
 } queryGetMapsList;
 
-int initGetResponse(queryGetMapsList *database);
-int addMap(queryGetMapsList *database, mapData map);
+void initGetResponse(queryGetMapsList *database);
+void addMap(queryGetMapsList *database, mapData map);
 void freeMapsData(mapsData *mapList);
 char *parseInJSON(queryGetMapsList *database);
 char *getResponseInJSON(queryGetMapsList *responseToGetMapsList);
-char *getErrorMessage(bool unknownErr);
+char *getQueryErrorMessage(bool unknownErr);
 
 #endif

@@ -2,19 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include "test_cJSON.h"
+#include "error_handler.h"
 
 /**
- * @brief initialise la réponse JSON correspondante à la requête "GET maps/list"
- * @param database la structure contenant les infos à convertir en JSON
- * @return 0 en cas de succès
-*/
-int initGetResponse(queryGetMapsList *database)
+ * @brief initialise JSON response for "GET maps/list" request
+ * @param database the structure containing the infos to convert to JSON
+ * @return void
+ */
+void initGetResponse(queryGetMapsList *database)
 {
     database->mapList.list = malloc(INITIAL_CAPACITY * sizeof(mapData));
     if (database->mapList.list == NULL)
     {
-        perror("Memory allocation failed");
-        return 1;
+        handleError(MALLOC_ERROR);
     }
 
     database->mapList.capacity = INITIAL_CAPACITY;
@@ -33,28 +33,20 @@ int initGetResponse(queryGetMapsList *database)
                                     "=----------------------="
                                     "************************")};
 
-    if (!addMap(database, map))
-    {
-        perror("Failed to add map");
-        freeMapsData(&(database->mapList));
-        return 1;
-    }
-
+    addMap(database, map);
     database->action = strdup(action);
     database->statut = strdup(statut);
     database->message = strdup(message);
     database->nbMapsList = nbMapsList;
-
-    return 0;
 }
 
 /**
- * @brief ajoute une map à la liste des maps
- * @param database la structure contenant les infos à convertir en JSON
- * @param map la map à ajouter
- * @return 1 en cas de succès
-*/
-int addMap(queryGetMapsList *database, mapData map)
+ * @brief add a map to the list of maps
+ * @param database the structure containing the infos to convert to JSON
+ * @param map the map to add
+ * @return 0 in case of success
+ */
+void addMap(queryGetMapsList *database, mapData map)
 {
     if (database->mapList.size >= database->mapList.capacity)
     {
@@ -62,23 +54,21 @@ int addMap(queryGetMapsList *database, mapData map)
         mapData *newList = realloc(database->mapList.list, database->mapList.capacity * sizeof(mapData));
         if (newList == NULL)
         {
-            perror("Memory reallocation failed");
-            return 0;
+            freeMapsData(&(database->mapList));
+            handleError(ADD_MAP_ERROR);
         }
         database->mapList.list = newList;
     }
 
     database->mapList.list[database->mapList.size] = map;
     database->mapList.size++;
-
-    return 1;
 }
 
 /**
- * @brief libère la mémoire allouée à la liste des maps
- * @param mapList la liste des maps
+ * @brief free maps data
+ * @param mapList the list of maps to free
  * @return void
-*/
+ */
 void freeMapsData(mapsData *mapList)
 {
     if (mapList->list)
@@ -92,17 +82,16 @@ void freeMapsData(mapsData *mapList)
 }
 
 /**
- * @brief convertit la structure contenant les infos à convertir en JSON
- * @param database la structure contenant les infos à convertir en JSON
- * @return le JSON correspondant à la structure
-*/
+ * @brief convert the structure to JSON
+ * @param database the structure containing the infos to convert to JSON
+ * @return the JSON string
+ */
 char *parseInJSON(queryGetMapsList *database)
 {
     cJSON *root = cJSON_CreateObject();
     if (root == NULL)
     {
-        printf("Error creating JSON object.\n");
-        return NULL;
+        handleError(CJSON_CREATE_OBJECT_ERROR);
     }
 
     cJSON_AddStringToObject(root, "action", database->action);
@@ -130,47 +119,49 @@ char *parseInJSON(queryGetMapsList *database)
 }
 
 /**
- * @brief retourne la réponse JSON correspondante à la requête "GET maps/list" 
- * @param responseToGetMapsList la structure contenant les infos à convertir en JSON
- * @return 0 en cas de succès
-*/
-char *getResponseInJSON(queryGetMapsList *responseToGetMapsList) {
+ * @brief return the JSON response for "GET maps/list" request
+ * @param responseToGetMapsList the structure containing the infos to convert to JSON
+ * @return the JSON string
+ */
+char *getResponseInJSON(queryGetMapsList *responseToGetMapsList)
+{
     char *jsonStr = parseInJSON(responseToGetMapsList);
     return jsonStr;
 }
 
 /**
- * @brief retourne le message d'erreur approprié en cas d'échec de "GET maps/list"
- * @param unknowErr booléen servant à définir le message d'erreur
- * @return le message d'erreur au format JSON
-*/
-char *getErrorMessage(bool unknowErr) {
+ * @brief return the JSON error message
+ * @param unknowErr true if the error is unknown
+ * @return the JSON string
+ */
+char *getQueryErrorMessage(bool unknowErr)
+{
 
     int statut = 520;
     char msg[] = "Unknown Error";
 
-    if (!unknowErr) {
+    if (!unknowErr)
+    {
         statut = 400;
         strcpy(msg, "Bad request");
     }
 
-    // Crée un objet cJSON pour représenter le JSON
+    // create a JSON object
     cJSON *root = cJSON_CreateObject();
     if (root == NULL)
     {
-        printf("Erreur lors de la création du JSON.\n");
-        return NULL;
+        handleError(CJSON_CREATE_OBJECT_ERROR);
     }
 
     cJSON_AddNumberToObject(root, "statut", statut);
     cJSON_AddStringToObject(root, "message", msg);
 
-    // Convertit l'objet cJSON en une chaîne JSON
+    // Convert JSON object to string
     char *jsonStr = cJSON_Print(root);
 
     // printf("errMsg =>\n%s\n", jsonStr);
 
-    // Libère la mémoire allouée par cJSON
+    // Delete JSON object
     cJSON_Delete(root);
 
     return jsonStr;

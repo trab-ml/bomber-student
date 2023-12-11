@@ -4,12 +4,13 @@
 #include "socket_utils.h"
 #include "client_list.h"
 #include "server_utils.h"
+#include "error_handler.h"
 
 int main(int argc, char **argv)
 {
     if (argc != 2) {
         printf("Usage: %s <port>\n", argv[0]);
-        exit(EXIT_FAILURE);
+        handleError(INVALID_ARGUMENT_ERROR);
     }
 
     int port = atoi(argv[1]);
@@ -18,6 +19,6 @@ int main(int argc, char **argv)
 
     runServer(server_socket, &clients);
 
-    // On ne devrait jamais arriver ici
+    // Should never be reached
     return EXIT_FAILURE;
 }

@@ -13,12 +13,6 @@ void handleFailedConnection(ErrorCode error)
     exit(EXIT_FAILURE);
 }
 
-// void handleFailedConnexionError(int len, struct sockaddr_in *client_address, int client_socket) {
-//     printf("[SERVER] Connection closed or receiving error from client %s:%i\n", inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port));
-//     close(client_socket);
-//     exit(EXIT_FAILURE);
-// }
-
 /**
  * @brief get the error message from the error code
  * @param error the error code

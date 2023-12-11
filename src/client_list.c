@@ -6,7 +6,6 @@
 #include "client_list.h"
 #include "error_handler.h"
 
-const unsigned int BACKLOG = 7;
 const unsigned int BUFFER_LEN = 1024;
 const unsigned int MAX_MISS = 128;
 const unsigned int CLIENT_BLOC_SIZE = 1024;

@@ -28,6 +28,12 @@ const char *getErrorMessage(ErrorCode error)
         return "Malloc error";
     case REALLOC_ERROR:
         return "Realloc error";
+    case THREAD_CREATION_ERROR:
+        return "Thread error";
+    case THREADPOOL_CREATION_ERROR:
+        return "Threadpool error";
+    case MUTEX_ERROR:
+        return "Mutex error";
     case INIT_GET_RESPONSE_ERROR:
         return "Init Get response error";
     case ADD_MAP_ERROR:

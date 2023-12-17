@@ -10,6 +10,9 @@ typedef enum
     INVALID_ARGUMENT_ERROR, // Error code for invalid arguments
     MALLOC_ERROR,               
     REALLOC_ERROR,
+    THREAD_CREATION_ERROR,
+    THREADPOOL_CREATION_ERROR,
+    MUTEX_ERROR,
     INIT_GET_RESPONSE_ERROR,                 
     ADD_MAP_ERROR,
     CJSON_CREATE_OBJECT_ERROR,                 

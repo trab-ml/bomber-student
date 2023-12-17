@@ -104,7 +104,8 @@ BONNES PRATIQUES
  + https://valgrind.org/docs/manual/manual-core-adv.html#manual-core-adv.gdbserver-simple
         [SERVER]
                 + For Debugging
-                gdb ./bin/main 
+                gdb ./bin/main
+                [ENTER]
                 (gdb) run 49151
                 ./bin/main 49151
 

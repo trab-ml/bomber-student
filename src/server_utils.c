@@ -10,40 +10,22 @@
 #include "client_list.h"
 #include "server_utils.h"
 #include "error_handler.h"
+#include <pthread.h>
+
+#define MAX_CONNECTIONS 5
 
 // Global flag to track initialization status
 int initialized = 0;
+
+pthread_mutex_t clientsMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_t threads[MAX_CONNECTIONS];
+// pthread_t *threads;
 
 void sendMessage(int client_socket, const char *message)
 {
     if (send(client_socket, message, strlen(message), 0) < 0)
     {
-       handleError(SOCKET_SEND_ERROR);
-    }
-}
-
-/**
- * @brief Starts the server and handles all incoming connections
- * @param server_socket Socket of the server
- * @param clients List of connected clients
- */
-void runServer(int server_socket, clientList *clients)
-{
-    struct sockaddr_in client_address;
-    socklen_t addr_len = sizeof(client_address);
-
-    while (true)
-    {
-        int client_socket = accept(server_socket, (struct sockaddr *)&client_address, &addr_len);
-        if (client_socket < 0)
-        {
-            handleError(ACCEPT_ERROR);
-        }
-
-        printf("[SERVER] New connection from %s:%i\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
-
-        handleNewClient(client_socket, &client_address, clients);
-        handleInactiveClients(clients);
+        handleError(SOCKET_SEND_ERROR);
     }
 }
 
@@ -53,8 +35,13 @@ void runServer(int server_socket, clientList *clients)
  * @param client_address Address of the client
  * @param clients List of connected clients
  */
-void handleNewClient(int client_socket, struct sockaddr_in *client_address, clientList *clients)
+void *handleClientThread(void *args)
 {
+    ThreadArgs *threadArgs = (ThreadArgs *)args;
+    int client_socket = threadArgs->client_socket;
+    struct sockaddr_in *client_address = &(threadArgs->client_address);
+    clientList *clients = threadArgs->clients;
+
     char buffer[BUFFER_LEN + 1];
     while (true)
     {
@@ -66,10 +53,14 @@ void handleNewClient(int client_socket, struct sockaddr_in *client_address, clie
         {
             printf("[SERVER] Connection closed or receiving error from client %s:%i\n", inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port));
             close(client_socket);
-            return;
+            free(args);
+            pthread_exit(NULL);
         }
 
-        printf("[SERVER] Message reçu de %s:%i\n", inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port));
+        printf("[SERVER] Message received from %s:%i\n", inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port));
+
+        // Lock the clients list mutex
+        pthread_mutex_lock(&clientsMutex);
 
         unsigned pos = findClient(client_address, clients);
         if (pos < clients->size)
@@ -89,7 +80,14 @@ void handleNewClient(int client_socket, struct sockaddr_in *client_address, clie
                 addClient(clients, *client_address, buffer, client_socket);
             }
         }
+
+        // Unlock the clients list mutex
+        pthread_mutex_unlock(&clientsMutex);
     }
+
+    // Should not be reached
+    free(args);
+    pthread_exit(NULL);
 }
 
 /**
@@ -144,7 +142,7 @@ void processClientMessage(int client_socket, const char *buffer, clientList *cli
  * @brief Deletes inactive clients by referring to the value of lastActivityTime
  * @param clients List of connected clients
  * @return void
-*/
+ */
 void handleInactiveClients(clientList *clients)
 {
     unsigned i = 0;
@@ -164,4 +162,72 @@ void handleInactiveClients(clientList *clients)
             i++;
         }
     }
+}
+
+/**
+ * @brief Initialize thread arguments
+ * @param client_socket Socket of the client
+ * @param client_address Address of the client
+ * @param clients List of connected clients
+ * @return Initialized ThreadArgs structure
+ */
+ThreadArgs *initThreadArgs(int client_socket, struct sockaddr_in client_address, clientList *clients)
+{
+    ThreadArgs *args = malloc(sizeof(ThreadArgs));
+    if (args == NULL)
+    {
+        handleError(MALLOC_ERROR);
+        return NULL;
+    }
+
+    args->client_socket = client_socket;
+    args->client_address = client_address;
+    args->clients = clients;
+
+    return args;
+}
+
+void destroyThreadPool(pthread_t *threads)
+{
+    for (int i = MAX_CONNECTIONS - 1; i >= 0; i--)
+    {
+        pthread_join(threads[i], NULL);
+    }
+    free(threads);
+
+    // Destroy the clients list mutex
+    pthread_mutex_destroy(&clientsMutex);
+}
+
+/**
+ * @brief Run the server and handles all incoming connections
+ * @param server_socket Socket of the server
+ * @param clients List of connected clients
+ */
+void runServer(int server_socket, clientList *clients)
+{
+    struct sockaddr_in client_address;
+    socklen_t addr_len = sizeof(client_address);
+    int client_socket, i;
+    for (i = 0; i < MAX_CONNECTIONS; i++)
+    {
+        client_socket = accept(server_socket, (struct sockaddr *)&client_address, &addr_len);
+        if (client_socket < 0)
+        {
+            handleError(ACCEPT_ERROR);
+        }
+
+        ThreadArgs *args = initThreadArgs(client_socket, client_address, clients);
+        
+        // Create a new thread to handle the connection
+        if (pthread_create(&threads[i], NULL, handleClientThread, (void *)args) != 0)
+        {
+            handleError(THREAD_CREATION_ERROR);
+        }
+
+        // Detach the thread
+        pthread_detach(threads[i]);
+    }
+
+    destroyThreadPool(threads);
 }

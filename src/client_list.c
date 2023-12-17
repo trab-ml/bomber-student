@@ -78,3 +78,22 @@ unsigned findClientBySocket(int client_socket, const clientList *clients)
     }
     return clients->size;
 }
+
+void freeClientList(clientList *clients) {
+    if (clients == NULL) {
+        return;
+    }
+
+    // Free the memory of each client's login
+    for (unsigned int i = 0; i < clients->size; ++i) {
+        free(clients->list[i].login);
+    }
+
+    // Free the memory of the list of clients
+    free(clients->list);
+
+    // Reset the client list
+    clients->list = NULL;
+    clients->capacity = 0;
+    clients->size = 0;
+}

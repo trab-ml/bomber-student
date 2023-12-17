@@ -16,9 +16,8 @@ int main(int argc, char **argv)
     int port = atoi(argv[1]);
     int server_socket = initTCPServerSocket(port);
     clientList clients = {NULL, 0, 0};
-
     runServer(server_socket, &clients);
 
-    // Should never be reached
+    cleanupServer(server_socket, &clients);
     return EXIT_FAILURE;
 }

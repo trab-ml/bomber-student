@@ -12,13 +12,11 @@
 #include "error_handler.h"
 #include <pthread.h>
 
-#define MAX_CONNECTIONS 5
-
 // Global flag to track initialization status
 int initialized = 0;
 
 pthread_mutex_t clientsMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_t threads[MAX_CONNECTIONS];
+pthread_t threads[THREAD_POOL_SIZE];
 // pthread_t *threads;
 
 void sendMessage(int client_socket, const char *message)
@@ -116,7 +114,7 @@ void processClientMessage(int client_socket, const char *buffer, clientList *cli
         response[GET_QUERY_RESPONSE_SIZE] = '\0';
         sendMessage(client_socket, response);
     }
-    else if (strncmp("DISC", buffer, strlen("DISC")) == 0)
+    else if (strncmp("exit", buffer, strlen("exit")) == 0)
     {
         unsigned pos = findClientBySocket(client_socket, clients);
         if (pos < clients->size)
@@ -174,7 +172,7 @@ void handleInactiveClients(clientList *clients)
 ThreadArgs *initThreadArgs(int client_socket, struct sockaddr_in client_address, clientList *clients)
 {
     ThreadArgs *args = malloc(sizeof(ThreadArgs));
-    if (args == NULL)
+    if (!args)
     {
         handleError(MALLOC_ERROR);
         return NULL;
@@ -187,14 +185,13 @@ ThreadArgs *initThreadArgs(int client_socket, struct sockaddr_in client_address,
     return args;
 }
 
-void destroyThreadPool(pthread_t *threads)
+void destroyThreadPool()
 {
-    for (int i = MAX_CONNECTIONS - 1; i >= 0; i--)
+    for (int i = THREAD_POOL_SIZE - 1; i >= 0; i--)
     {
         pthread_join(threads[i], NULL);
     }
-    free(threads);
-
+    
     // Destroy the clients list mutex
     pthread_mutex_destroy(&clientsMutex);
 }
@@ -209,7 +206,7 @@ void runServer(int server_socket, clientList *clients)
     struct sockaddr_in client_address;
     socklen_t addr_len = sizeof(client_address);
     int client_socket, i;
-    for (i = 0; i < MAX_CONNECTIONS; i++)
+    for (i = 0; i < THREAD_POOL_SIZE; i++)
     {
         client_socket = accept(server_socket, (struct sockaddr *)&client_address, &addr_len);
         if (client_socket < 0)
@@ -229,5 +226,15 @@ void runServer(int server_socket, clientList *clients)
         pthread_detach(threads[i]);
     }
 
-    destroyThreadPool(threads);
+    destroyThreadPool();
+}
+
+void cleanupServer(int server_socket, clientList *clients) {
+    // Fermer le socket du serveur
+    if (close(server_socket) != 0) {
+        handleError(SOCKET_CLOSE_ERROR);
+    }
+
+    // Libérer la mémoire de la liste des clients
+    freeClientList(clients);
 }

@@ -44,6 +44,14 @@ void sendMessageAndExit(ThreadArgs *args, const char *message) {
     pthread_exit(NULL);
 }
 
+/**
+ * @brief Ensure that the client is looking for a bomberstudent server
+ * @param args Thread arguments
+ * @param buffer Received message
+ * @param expectedMessage Expected message
+ * @param acknowledgmentOfReceipt Acknowledgment of receipt
+ * @return true if the message is valid, false otherwise
+*/
 bool validateMessageLength(ThreadArgs *args, char *buffer, const char *expectedMessage, const char *acknowledgmentOfReceipt) {
     int expectedMsgLen = strlen(expectedMessage);
     int currentBufferLen = strlen(buffer);
@@ -73,7 +81,7 @@ bool listenClientsLookingForServer(ThreadArgs *args, char *buffer) {
         return false;
     }
 
-    return validateMessageLength(args, buffer, LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE, "\nhello i’m a bomberstudent server\n");
+    return validateMessageLength(args, buffer, LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE, "hello i’m a bomberstudent server\n");
 }
 
 /**
@@ -118,7 +126,7 @@ void *handleClientThread(void *args)
                 // Handle new client registration
                 if (len + 1 >= CLIENT_LOGIN_SIZE)
                 {
-                    sendMessage(threadArgs->client_socket, "\nlogin too long!");
+                    sendMessage(threadArgs->client_socket, "login too long!\n");
                 }
                 else
                 {

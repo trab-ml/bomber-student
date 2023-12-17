@@ -55,23 +55,20 @@ bomber-student/
 $ make; ./bin/main 49151
 gcc -Wall -Werror -g -Iinclude -c -o bin/server_utils.o src/server_utils.c
 gcc -Wall -Werror -g -o bin/main bin/cJSON.o bin/client_list.o bin/error_handler.o bin/main.o bin/server_utils.o bin/socket_utils.o bin/test_cJSON.o
-[SERVER] Message received from 127.0.0.1:44424
-[SERVER] Add client to clients list 127.0.0.1:44424, his login is Mario
-
-[SERVER] Message received from 127.0.0.1:44424
-[SERVER] Message received from 127.0.0.1:44424
-[SERVER] Message received from 127.0.0.1:44424
+[SERVER] Add client to clients list 127.0.0.1:57518, his login is Mario
 
 # [CLIENT]
 $ nc localhost 49151
-eee
-yuhjj
+testman
+letmetest
+okeeey
 looking for bomberstudent server
 looking for bomberstudent servers
-
 hello i’m a bomberstudent server
+Mariiiiiiiiiiiiio
+login too long!
 Mario
-GEt maps/listt
+Get maps/list
 {
         "statut":       400,
         "message":      "Bad request"

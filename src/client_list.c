@@ -89,10 +89,7 @@ void freeClientList(clientList *clients) {
         free(clients->list[i].login);
     }
 
-    // Free the memory of the list of clients
     free(clients->list);
-
-    // Reset the client list
     clients->list = NULL;
     clients->capacity = 0;
     clients->size = 0;

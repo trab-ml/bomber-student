@@ -17,7 +17,6 @@ int initialized = 0;
 
 pthread_mutex_t clientsMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t threads[THREAD_POOL_SIZE];
-// pthread_t *threads;
 
 void sendMessage(int client_socket, const char *message)
 {
@@ -49,7 +48,7 @@ void *handleClientThread(void *args)
 
         if (len <= 0)
         {
-            printf("[SERVER] Connection closed or receiving error from client %s:%i\n", inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port));
+            printf("[SERVER] Connection closed %s:%i\n", inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port));
             close(client_socket);
             free(args);
             pthread_exit(NULL);
@@ -83,7 +82,6 @@ void *handleClientThread(void *args)
         pthread_mutex_unlock(&clientsMutex);
     }
 
-    // Should not be reached
     free(args);
     pthread_exit(NULL);
 }
@@ -185,6 +183,10 @@ ThreadArgs *initThreadArgs(int client_socket, struct sockaddr_in client_address,
     return args;
 }
 
+/**
+ * @brief Destroy the thread pool
+ * @return void
+ */
 void destroyThreadPool()
 {
     for (int i = THREAD_POOL_SIZE - 1; i >= 0; i--)
@@ -229,12 +231,17 @@ void runServer(int server_socket, clientList *clients)
     destroyThreadPool();
 }
 
+/**
+ * @brief Cleanup the server by closing the server socket and freeing the clients list
+ * @param server_socket Socket of the server
+ * @param clients List of connected clients
+ */
 void cleanupServer(int server_socket, clientList *clients) {
-    // Fermer le socket du serveur
+    // Close the server socket
     if (close(server_socket) != 0) {
         handleError(SOCKET_CLOSE_ERROR);
     }
 
-    // Libérer la mémoire de la liste des clients
+    // Free the clients list
     freeClientList(clients);
 }

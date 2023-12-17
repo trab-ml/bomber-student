@@ -2,10 +2,10 @@
 clear
 make
 
-# Détecte le système d'exploitation
+# Detect OS
 OS=$(uname)
 
-# Sélectionne la commande appropriée
+# Open terminal based on OS
 open_terminal() {
     case "$OS" in
         "Linux")
@@ -29,8 +29,8 @@ open_terminal() {
     esac
 }
 
-# Ouvre un nouveau terminal et exécute le binaire main
+# Open terminal and execute main
 open_terminal ./bin/main 49151
 
-# Ouvre un autre terminal et exécute nc sur localhost 49151
+# In another terminal, connect to server on port 49151 (nc sur localhost 49151)
 open_terminal nc localhost 49151

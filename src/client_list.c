@@ -4,11 +4,14 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include "client_list.h"
+#include "server_utils.h"
 #include "error_handler.h"
 
 const unsigned int BUFFER_LEN = 1024;
 const unsigned int MAX_MISS = 128;
 const unsigned int CLIENT_BLOC_SIZE = 1024;
+
+#define NEW_CLIENT_MESSAGE_FORMAT "[SERVER] New client joined: %s\n"
 
 /**
  * @brief initialise the list of clients
@@ -18,7 +21,7 @@ const unsigned int CLIENT_BLOC_SIZE = 1024;
 void addClient(clientList *clients, struct sockaddr_in addr, const char *login, int client_socket)
 {
     printf("[SERVER] Add client to clients list %s:%i, his login is %s\n",
-           inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), login);
+            inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), login);
 
     if (clients->size >= clients->capacity)
     {
@@ -40,6 +43,9 @@ void addClient(clientList *clients, struct sockaddr_in addr, const char *login, 
     clients->list[clients->size].login[MAX_LOGIN_LEN - 1] = '\0';
     clients->list[clients->size].lastActivityTime = time(NULL);
     clients->size++;
+
+    // Broadcast the new client information to all clients
+    broadcastNewClient(clients, login);
 }
 
 /**
@@ -93,4 +99,27 @@ void freeClientList(clientList *clients) {
     clients->list = NULL;
     clients->capacity = 0;
     clients->size = 0;
+}
+
+/**
+ * @brief Broadcast new client information to all clients
+ * @param clients the list of clients
+ * @param newClientLogin the login of the new client
+ * @return void
+ */
+void broadcastNewClient(const clientList *clients, const char *newClientLogin)
+{
+    for (unsigned i = 0; i < clients->size; i++)
+    {
+        // Skip broadcasting to the new client itself
+        if (strcmp(clients->list[i].login, newClientLogin) == 0)
+        {
+            continue;
+        }
+
+        // Broadcast the message to each connected client
+        char broadcastMessage[BUFFER_LEN];
+        snprintf(broadcastMessage, sizeof(broadcastMessage), NEW_CLIENT_MESSAGE_FORMAT, newClientLogin);
+        sendMessage(clients->list[i].client_socket, broadcastMessage);
+    }
 }

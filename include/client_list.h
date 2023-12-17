@@ -30,5 +30,6 @@ void addClient(clientList *clients, const struct sockaddr_in client_address, con
 unsigned findClient(const struct sockaddr_in *client_address, const clientList *clients);
 unsigned findClientBySocket(int client_socket, const clientList *clients);
 void freeClientList(clientList *clients);
+void broadcastNewClient(const clientList *clients, const char *newClientLogin);
 
 #endif

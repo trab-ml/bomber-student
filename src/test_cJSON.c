@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "test_cJSON.h"
-#include "error_handler.h"
 
 /**
  * @brief initialise JSON response for "GET maps/list" request

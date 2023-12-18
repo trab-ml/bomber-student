@@ -6,6 +6,7 @@
 
 // Maximum length of a login
 #define MAX_LOGIN_LEN 20
+#define NEW_CLIENT_MESSAGE_FORMAT "[SERVER] New client joined: %s\n"
 
 extern const unsigned int BUFFER_LEN;
 extern const unsigned int MAX_MISS;

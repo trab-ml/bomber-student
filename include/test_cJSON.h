@@ -3,6 +3,7 @@
 
 #include "cJSON.h"
 #include <stdbool.h>
+#include "error_handler.h"
 
 #define GAME_BOARD_SIZE 193
 #define GET_QUERY_RESPONSE_SIZE 399

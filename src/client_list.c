@@ -1,17 +1,15 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 #include <arpa/inet.h>
 #include <assert.h>
-#include "client_list.h"
 #include "server_utils.h"
 #include "error_handler.h"
+#include "client_list.h"
 
 const unsigned int BUFFER_LEN = 1024;
 const unsigned int MAX_MISS = 128;
 const unsigned int CLIENT_BLOC_SIZE = 1024;
-
-#define NEW_CLIENT_MESSAGE_FORMAT "[SERVER] New client joined: %s\n"
 
 /**
  * @brief initialise the list of clients
@@ -118,7 +116,7 @@ void broadcastNewClient(const clientList *clients, const char *newClientLogin)
         }
 
         // Broadcast the message to each connected client
-        char broadcastMessage[BUFFER_LEN];
+        char broadcastMessage[strlen(NEW_CLIENT_MESSAGE_FORMAT) + strlen(newClientLogin) + 1];
         snprintf(broadcastMessage, sizeof(broadcastMessage), NEW_CLIENT_MESSAGE_FORMAT, newClientLogin);
         sendMessage(clients->list[i].client_socket, broadcastMessage);
     }

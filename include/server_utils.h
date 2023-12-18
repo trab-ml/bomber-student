@@ -7,7 +7,19 @@
 #define LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE "looking for bomberstudent servers"
 #define MIN_MESSAGE_LENGTH 2 // Minimum length of a message
 #define DISCONNECTED_MESSAGE "Disconnected"
+#define SERVER_HELLO_MESSAGE "hello i’m a bomberstudent server\n"
 
+#include <errno.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
+#include <unistd.h>
+#include <time.h>
+#include <pthread.h>
+#include "test_cJSON.h"
+#include "socket_utils.h"
+#include "client_list.h"
+#include "error_handler.h"
 #include <stdbool.h>
 
 typedef struct
@@ -26,6 +38,7 @@ bool listenClientsLookingForServer(ThreadArgs *args, char *buffer);
 void *handleClientThread(void *args);
 void processClientMessage(int client_socket, const char *buffer, clientList *clients);
 void handleInactiveClients(clientList *clients);
+
 ThreadArgs *initThreadArgs(int client_socket, struct sockaddr_in client_address, clientList *clients);
 void joinAndFreeThread(pthread_t *thread);
 void freeThreadArgs(ThreadArgs *args);

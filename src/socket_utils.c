@@ -1,13 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <assert.h>
-#include <errno.h>
-#include <netinet/in.h>
 #include "socket_utils.h"
-#include "error_handler.h"
 
 /**
  * @brief Initialise a TCP server socket.

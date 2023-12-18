@@ -1,19 +1,5 @@
 #include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-#include <unistd.h>
-#include <time.h>
-#include "test_cJSON.h"
-#include "socket_utils.h"
-#include "client_list.h"
 #include "server_utils.h"
-#include "error_handler.h"
-#include <pthread.h>
-
-// Global flag to track initialization status
-int initialized = 0;
 
 pthread_mutex_t clientsMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t threads[THREAD_POOL_SIZE] = {0};
@@ -89,7 +75,7 @@ bool listenClientsLookingForServer(ThreadArgs *args, char *buffer)
         return false;
     }
 
-    return checkTriggerMessage(args, buffer, LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE, "hello i’m a bomberstudent server\n");
+    return checkTriggerMessage(args, buffer, LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE, SERVER_HELLO_MESSAGE);
 }
 
 /**
@@ -105,21 +91,24 @@ void *handleClientThread(void *args)
     int client_socket = threadArgs->client_socket;
     struct sockaddr_in *client_address = &(threadArgs->client_address);
     clientList *clients = threadArgs->clients;
-    
+
     char buffer[BUFFER_LEN + 1];
-    int len;
+    int len, queryLen;
 
     // still listening clients who are looking for a bomberstudent server
-    while (listenClientsLookingForServer(threadArgs, buffer))
+    if (listenClientsLookingForServer(threadArgs, buffer))
     {
         while (true)
         {
             memset(buffer, 0, sizeof(buffer)); // Empty the buffer
             len = recv(client_socket, buffer, BUFFER_LEN, 0);
             buffer[len] = '\0';
+            queryLen = strlen("exit");
 
-            if (isConnectionClosed(len, client_address, threadArgs) || (strncmp(buffer, "exit", 4) == 0))
+            if (isConnectionClosed(len, client_address, threadArgs) || (len - 1 == queryLen && strncmp(buffer, "exit", queryLen) == 0))
             {
+                printf("exiting\n");
+                close(client_socket);
                 break;
             }
 
@@ -149,66 +138,15 @@ void *handleClientThread(void *args)
             // Unlock the clients list mutex
             pthread_mutex_unlock(&clientsMutex);
         }
-
-        freeThreadArgs(threadArgs);
-        pthread_exit(NULL);
     }
 
+    freeThreadArgs(threadArgs);
+    pthread_exit(NULL);
     joinAndFreeThread(&threads[threadArgs->thread_id]);
+    close(client_socket);
+    exit(EXIT_SUCCESS);
 
     return NULL;
-}
-
-/**
- * @brief Process the received client message based on its content
- * @param client_socket Socket of the client
- * @param buffer Received message
- * @param clients List of connected clients
- * @return void
- */
-void processClientMessage(int client_socket, const char *buffer, clientList *clients)
-{
-    char getMapQuery[] = "GET maps/list";
-    char exitQuery[] = "exit";
-    int getMapQueryLen = strlen(getMapQuery), exitQueryLen = strlen(exitQuery), currentBufferLen = strlen(buffer);
-
-    if (currentBufferLen - 1 == getMapQueryLen && strncmp(buffer, getMapQuery, getMapQueryLen) == 0)
-    {
-        char response[GET_QUERY_RESPONSE_SIZE + 1];
-        queryGetMapsList responseToGetMapsList;
-
-        if (!initialized)
-        {
-            initGetResponse(&responseToGetMapsList);
-            initialized = 1;
-        }
-
-        char *jsonResponse = getResponseInJSON(&responseToGetMapsList);
-
-        strncpy(response, jsonResponse, GET_QUERY_RESPONSE_SIZE);
-        response[GET_QUERY_RESPONSE_SIZE] = '\0';
-        sendMessage(client_socket, response);
-    }
-    else if (currentBufferLen - 1 == exitQueryLen && strncmp(buffer, exitQuery, exitQueryLen) == 0)
-    {
-        unsigned pos = findClientBySocket(client_socket, clients);
-        if (pos < clients->size)
-        {
-            sendMessage(client_socket, "Disconnected");
-
-            if (close(client_socket) != 0)
-            {
-                handleError(SOCKET_CLOSE_ERROR);
-            }
-            clients->list[pos] = clients->list[--clients->size];
-        }
-    }
-    else
-    {
-        char *response = getQueryErrorMessage(false);
-        sendMessage(client_socket, response);
-        free(response);
-    }
 }
 
 /**

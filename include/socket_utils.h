@@ -1,7 +1,7 @@
 #ifndef SOCKET_UTILS_H
 #define SOCKET_UTILS_H
 
-#define BACKLOG 5
+#define BACKLOG 100 // Max connection queue size
 
 #include <arpa/inet.h>
 

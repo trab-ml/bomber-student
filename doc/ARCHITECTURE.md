@@ -1,53 +1,36 @@
 # Architecture LAN
 
-    *Serveur de Jeu (Local)*
-
-    - Gestion des connexions (sockets)
-    - Authentification des Joueurs
-    - Création et Gestion des Parties
-    - Synchronisation des Joueurs
-    - Logique du Jeu
-    - Gestion de la carte du jeu
-    - Gestion des joueurs et des bombes
-
-    *Clients (Côté Joueur)*
-
-    - Interface Utilisateur (simpliste)
-    - Affichage de la carte et des joueurs
-    - Indicateurs de score et de temps
-    - Communication avec le serveur (sockets)
-    - Gestion des Actions du Joueur
-    - Déplacement du personnage
-    - Placement des bombes
-    - Gestion des événements de jeu
-
-[Joueur 1]    [Joueur 2]    ...    [Joueur N]
-    |             |                   |
-    |             |                   |
-[Client 1]     [Client 2]    ...    [Client N]
-    |             |                   |
-    |             |                   |
-   [Serveur de Jeu (Local)]
+[Conception de l'Architecture en C]
     |
-   [Logique du Jeu]
+    +-- Serveur de Jeu (Local)
+    |       |
+    |       +-- Gestion des connexions (sockets)
+    |       |
+    |       +-- Logique du Jeu
+    |       |       |
+    |       |       +-- Gestion de la carte du jeu
+    |       |       |
+    |       |       +-- Gestion des joueurs et des bombes
+    |       |
+    |       +-- Synchronisation des joueurs
     |
-   [Tâches du Serveur]
-       |
-       +-- Gestion des connexions (sockets)
-       |
-       +-- Authentification des Joueurs
-       |       |
-       |       +-- Vérification des identifiants
-       |       |
-       |       +-- Attribution de noms d'utilisateur
-       |
-       +-- Création et Gestion des Parties
-       |       |
-       |       +-- Création de nouvelles parties
-       |       |
-       |       +-- Assignation de joueurs aux parties
-       |
-       +-- Synchronisation des Joueurs
+    +-- Clients (Côté Joueur)
+            |
+            +-- Interface Utilisateur (simpliste)
+            |       |
+            |       +-- Affichage de la carte et des joueurs
+            |       |
+            |       +-- Indicateurs de score et de temps
+            |
+            +-- Communication avec le serveur (sockets)
+            |
+            +-- Gestion des Actions du Joueur
+                    |
+                    +-- Déplacement du personnage
+                    |
+                    +-- Placement des bombes
+                    |
+                    +-- Gestion des événements de jeu
 
 (À visualiser dans vscode)
 
@@ -55,36 +38,34 @@
 
 Le serveur de jeu local est écrit en langage C et gère la logique du jeu "Bomber Student".
 
-Gestion de la Logique du Jeu :
-
+**Logique du Jeu**
 Le serveur gère la carte du jeu, y compris les obstacles, les objets et les emplacements des joueurs.
 Il gère les joueurs, leurs positions, les bombes qu'ils posent, et les interactions entre les joueurs (éliminations, bonus, etc.).
-Synchronisation des Joueurs :
 
+**Synchronisation des Joueurs**
 Le serveur assure la synchronisation des actions des joueurs, veillant à ce que tous les clients disposent d'une vue cohérente du jeu.
-Interface Utilisateur (simpliste) :
 
+**Interface Utilisateur (simpliste)**
 Les clients disposent d'une interface utilisateur minimale qui affiche la carte du jeu, les joueurs, les scores et le temps restant.
 L'interface graphique peut être simpliste, mettant l'accent sur la clarté des informations de jeu.
-Gestion des Actions du Joueur :
 
-Les clients permettent aux joueurs de se déplacer sur la carte, de placer des bombes et d'interagir avec le jeu.
-Ils envoient ces actions au serveur via des sockets pour que le serveur les propage aux autres joueurs.
+**Gestion des Actions du Joueur**
+Les clients permettent aux joueurs de se déplacer sur la carte, de placer des bombes et d'interagir avec le jeu. Ils envoient ces actions au serveur via des sockets pour que le serveur les propage aux autres joueurs.
 
-### Avantages
+## Avantages
 
-Faible latence : En utilisant une architecture LAN, les joueurs bénéficient d'une latence minimale, garantissant une expérience de jeu fluide.
-Facilité de configuration : Cette architecture simplifie la configuration du jeu, car le serveur de jeu peut être exécuté localement.
-Idéal pour des événements locaux : Parfait pour des sessions de jeu en personne, des LAN parties ou des rassemblements d'amis.
+- Faible latence : En utilisant une architecture LAN, les joueurs bénéficient d'une latence minimale, garantissant une expérience de jeu fluide.
+- Facilité de configuration : Cette architecture simplifie la configuration du jeu, car le serveur de jeu peut être exécuté localement.
+- Idéal pour des événements locaux : Parfait pour des sessions de jeu en personne, des LAN parties ou des rassemblements d'amis.
 
-#### Fonctionnement
+## Fonctionnement
 
 Les joueurs utilisent les clients pour se connecter au serveur de jeu local via le réseau local.
 Le serveur de jeu local gère la logique du jeu, coordonne les actions des joueurs et maintient l'état du jeu.
 Les clients transmettent les actions des joueurs au serveur de jeu, qui les propage aux autres joueurs connectés.
 Le serveur de jeu assure la synchronisation du jeu pour garantir une expérience cohérente.
 
-##### Pourquoi ce choix?
+## Pourquoi ce choix?
 
 Les joueurs sont physiquement proches les uns des autres, ce qui facilite l'organisation de parties en personne.
 La faible latence dans un réseau local garantit une expérience de jeu réactive.

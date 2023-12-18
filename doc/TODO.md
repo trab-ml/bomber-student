@@ -18,13 +18,3 @@
 | Traitement des entrées erronées  | Collaboratif              | Collaboratif              | Gérer les entrées incorrectes des joueurs.      | Gestion des erreurs     | Documentation sur la gestion des erreurs. |
 | Gestion des déconnexions         | Collaboratif              | Collaboratif              | Traiter les déconnexions, maintenir la stabilité. | Gestion des connexions  | Tutoriels sur la gestion des déconnexions. |
 | Enregistrement des erreurs       | Collaboratif              | Collaboratif              | Logguer les erreurs, les exceptions du jeu.     | Gestion des erreurs     | Tutoriels sur le logging en C. |
-
-## AUTRES RESSOURCES
-
-- TP2 (UN PETIT CHAT EN UDP)
-- <https://github.com/karimbeji/bombermanmmgr/tree/master>
-- <https://oldschoolprg.x10.mx/projets.php#bomberman>
-- <https://codes-sources.commentcamarche.net/source/17477-bomberman-code-r-avec-sdl-simple-directmedia-layer>
-- <https://youtu.be/77vYKsXC4IE?si=CTjuEt7pcNMZnZAL>
-- <https://youtube.com/playlist?list=PLGVRGFq_teMPG5MPmZrDaVh3VlsGuC97k&si=b4EJtzW9W7dDLUxd>
-- <https://github.com/DaveGamble/cJSON>

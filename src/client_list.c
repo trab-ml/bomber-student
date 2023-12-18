@@ -20,9 +20,6 @@ const unsigned int CLIENT_BLOC_SIZE = 1024;
  */
 void addClient(clientList *clients, struct sockaddr_in addr, const char *login, int client_socket)
 {
-    printf("[SERVER] Add client to clients list %s:%i, his login is %s\n",
-            inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), login);
-
     if (clients->size >= clients->capacity)
     {
         clients->capacity += CLIENT_BLOC_SIZE;
@@ -43,6 +40,9 @@ void addClient(clientList *clients, struct sockaddr_in addr, const char *login, 
     clients->list[clients->size].login[MAX_LOGIN_LEN - 1] = '\0';
     clients->list[clients->size].lastActivityTime = time(NULL);
     clients->size++;
+
+    // printf("[SERVER] Add client %s:%i to clients list, his login is %s\n",
+    //         inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), login);
 
     // Broadcast the new client information to all clients
     broadcastNewClient(clients, login);

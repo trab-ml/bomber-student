@@ -16,18 +16,8 @@
 int initialized = 0;
 
 pthread_mutex_t clientsMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_t threads[THREAD_POOL_SIZE];
-
-bool isConnectionClosed(int len, const struct sockaddr_in *client_address, ThreadArgs *args) {
-    if (len <= 0) {
-        printf("[SERVER] Connection closed %s:%i\n", inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port));
-        close(args->client_socket);
-        free(args);
-        pthread_exit(NULL);
-        return true;
-    }
-    return false;
-}
+pthread_t threads[THREAD_POOL_SIZE] = {0};
+int threadIndex = 0;
 
 void sendMessage(int client_socket, const char *message)
 {
@@ -37,7 +27,8 @@ void sendMessage(int client_socket, const char *message)
     }
 }
 
-void sendMessageAndExit(ThreadArgs *args, const char *message) {
+void sendMessageAndExit(ThreadArgs *args, const char *message)
+{
     sendMessage(args->client_socket, message);
     close(args->client_socket);
     free(args);
@@ -45,18 +36,20 @@ void sendMessageAndExit(ThreadArgs *args, const char *message) {
 }
 
 /**
- * @brief Ensure that the client is looking for a bomberstudent server
+ * @brief Check if the received message is valid
  * @param args Thread arguments
  * @param buffer Received message
  * @param expectedMessage Expected message
  * @param acknowledgmentOfReceipt Acknowledgment of receipt
  * @return true if the message is valid, false otherwise
-*/
-bool validateMessageLength(ThreadArgs *args, char *buffer, const char *expectedMessage, const char *acknowledgmentOfReceipt) {
+ */
+bool checkTriggerMessage(ThreadArgs *args, char *buffer, const char *expectedMessage, const char *acknowledgmentOfReceipt)
+{
     int expectedMsgLen = strlen(expectedMessage);
     int currentBufferLen = strlen(buffer);
 
-    if (currentBufferLen - 1 != expectedMsgLen || strncmp(buffer, expectedMessage, expectedMsgLen) != 0) {
+    if (currentBufferLen - 1 != expectedMsgLen || strncmp(buffer, expectedMessage, expectedMsgLen) != 0)
+    {
         return false;
     }
 
@@ -64,24 +57,39 @@ bool validateMessageLength(ThreadArgs *args, char *buffer, const char *expectedM
     return true;
 }
 
+bool isConnectionClosed(int len, const struct sockaddr_in *client_address, ThreadArgs *args)
+{
+    if (len <= 0)
+    {
+        printf("[SERVER] Connection closed %s:%i\n", inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port));
+        close(args->client_socket);
+        freeThreadArgs(args);
+        pthread_exit(NULL);
+        return true;
+    }
+    return false;
+}
+
 /**
  * @brief Ensure that the client is looking for a bomberstudent server
  * @param args Thread arguments
  * @param buffer Received message
  * @return true if the client is looking for a bomberstudent server, false otherwise
-*/
-bool listenClientsLookingForServer(ThreadArgs *args, char *buffer) {
+ */
+bool listenClientsLookingForServer(ThreadArgs *args, char *buffer)
+{
     memset(buffer, 0, BUFFER_LEN + 1);
     int len = recv(args->client_socket, buffer, BUFFER_LEN, 0);
     buffer[len] = '\0';
 
     struct sockaddr_in *client_address = &(args->client_address);
 
-    if (isConnectionClosed(len, client_address, args)) {
+    if (isConnectionClosed(len, client_address, args))
+    {
         return false;
     }
 
-    return validateMessageLength(args, buffer, LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE, "hello i’m a bomberstudent server\n");
+    return checkTriggerMessage(args, buffer, LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE, "hello i’m a bomberstudent server\n");
 }
 
 /**
@@ -97,12 +105,12 @@ void *handleClientThread(void *args)
     int client_socket = threadArgs->client_socket;
     struct sockaddr_in *client_address = &(threadArgs->client_address);
     clientList *clients = threadArgs->clients;
-
+    
     char buffer[BUFFER_LEN + 1];
     int len;
 
-    // ensure that the client is looking for a bomberstudent server
-    if (listenClientsLookingForServer(threadArgs, buffer))
+    // still listening clients who are looking for a bomberstudent server
+    while (listenClientsLookingForServer(threadArgs, buffer))
     {
         while (true)
         {
@@ -110,11 +118,15 @@ void *handleClientThread(void *args)
             len = recv(client_socket, buffer, BUFFER_LEN, 0);
             buffer[len] = '\0';
 
-            isConnectionClosed(len, client_address, threadArgs);
+            if (isConnectionClosed(len, client_address, threadArgs) || (strncmp(buffer, "exit", 4) == 0))
+            {
+                break;
+            }
 
             // Lock the clients list mutex
             pthread_mutex_lock(&clientsMutex);
 
+            // Access/modification of clients list
             unsigned pos = findClient(client_address, clients);
             if (pos < clients->size)
             {
@@ -138,11 +150,13 @@ void *handleClientThread(void *args)
             pthread_mutex_unlock(&clientsMutex);
         }
 
-        free(args);
+        freeThreadArgs(threadArgs);
         pthread_exit(NULL);
     }
 
-    return handleClientThread(args);
+    joinAndFreeThread(&threads[threadArgs->thread_id]);
+
+    return NULL;
 }
 
 /**
@@ -224,7 +238,7 @@ void handleInactiveClients(clientList *clients)
 }
 
 /**
- * @brief Initialize thread arguments
+ * @brief Initialize a thread arguments
  * @param client_socket Socket of the client
  * @param client_address Address of the client
  * @param clients List of connected clients
@@ -239,11 +253,26 @@ ThreadArgs *initThreadArgs(int client_socket, struct sockaddr_in client_address,
         return NULL;
     }
 
+    args->thread_id = threadIndex++;
     args->client_socket = client_socket;
     args->client_address = client_address;
     args->clients = clients;
 
     return args;
+}
+
+void joinAndFreeThread(pthread_t *thread)
+{
+    pthread_join(*thread, NULL);
+    *thread = 0;
+}
+
+void freeThreadArgs(ThreadArgs *args)
+{
+    if (args)
+    {
+        free(args);
+    }
 }
 
 /**
@@ -286,9 +315,6 @@ void runServer(int server_socket, clientList *clients)
         {
             handleError(THREAD_CREATION_ERROR);
         }
-
-        // Detach the thread
-        pthread_detach(threads[i]);
     }
 
     destroyThreadPool();
@@ -301,12 +327,17 @@ void runServer(int server_socket, clientList *clients)
  */
 void cleanupServer(int server_socket, clientList *clients)
 {
-    // Close the server socket
+    for (int i = 0; i < THREAD_POOL_SIZE; i++)
+    {
+        joinAndFreeThread(&threads[i]);
+    }
+
+    pthread_mutex_destroy(&clientsMutex);
+
     if (close(server_socket) != 0)
     {
         handleError(SOCKET_CLOSE_ERROR);
     }
 
-    // Free the clients list
     freeClientList(clients);
 }

@@ -1,27 +1,27 @@
-# Compilateur
+# compilator: gcc
 CC = gcc
 
-# Options de compilation
+# compilation flags
 CFLAGS = -Wall -Werror -g
 
-# Répertoires
+# directories
 SRC_DIR = src
 OBJ_DIR = bin
 INC_DIR = include
 
-# Fichiers sources
+# associated files
 SRC = $(wildcard $(SRC_DIR)/*.c)
 
-# Fichiers objet (dans le répertoire OBJ_DIR)
+# object files in OBJ_DIR directory
 OBJ = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC))
 
-# Nom du fichier exécutable final (dans le répertoire OBJ_DIR)
+# executable filename in OBJ_DIR directory
 TARGET = $(OBJ_DIR)/main
 
-# Chemin des fichiers d'en-tête
+# include path
 INC = -I$(INC_DIR)
 
-# Règles de compilation
+# default target
 all: $(TARGET)
 
 $(TARGET): $(OBJ)

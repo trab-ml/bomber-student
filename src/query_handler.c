@@ -6,6 +6,12 @@
 // Global flag to track initialization status
 int initialized = 0;
 
+/**
+ * @brief Handle the GET maps/list query
+ * @param clientIndex Index of the client
+ * @param client_socket Socket of the client
+ * @param clients List of connected clients
+*/
 void handleGetMapsList(int clientIndex, int client_socket, clientList *clients)
 {
     char response[GET_QUERY_RESPONSE_SIZE + 1];

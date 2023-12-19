@@ -1,0 +1,513 @@
+<<../EDU-1P-C-projet_reseaux_v3/include/map.h>>
+//
+// Created by XuZY on 2023/11/20.
+//
+#ifndef EDU_1P_C_PROJET_RESEAUX_V3_SRC_MAP_H_
+#define EDU_1P_C_PROJET_RESEAUX_V3_SRC_MAP_H_
+typedef enum {
+	Empty = 0, // 空地
+	Destr = 1, // 可以破坏的
+	Indes = 2,  // 不可破坏的
+	Player = 3,
+	Bomb = 4
+}wallstate;
+typedef struct Wall {
+	int w,h;
+	int wallstate;
+}wall;
+typedef struct map{
+	int id;
+	int width,height;
+	char* content;
+	wall* maps;
+}map;
+void create_map1(map *m);
+void show_map(map *m);
+map * init_map();
+void preprocess_map(map *m);
+void show_by_wall(map *m);
+#endif //EDU_1P_C_PROJET_RESEAUX_V3_SRC_MAP_H_
+
+
+
+<<../EDU-1P-C-projet_reseaux_v3/include/player.h>>
+//
+// Created by XuZY on 2023/11/19.
+//
+#ifndef EDU_1P_C_PROJET_RESEAUX_V3_SRC_PLAYER_H_
+#define EDU_1P_C_PROJET_RESEAUX_V3_SRC_PLAYER_H_
+#include "bomb.h"
+#include "game.h"
+#define TIMEEXP 20 // ms
+// --------
+// --------
+// --------
+typedef struct Player {
+	int x, y; // player's position
+	// status
+	void (*show_info_player)(struct Player *);
+	struct OneGame *gameRef;
+	int speed;
+	int impact_dist;
+	int nb_classic_b; // 普通炸弹
+	int nb_mine; // 地雷数量
+	int nb_remote_n; // 遥控炸弹
+	//
+	int nbcb; // 摆放的炸弹的数量
+	// movement of player
+	void (*move_up)(struct Player *, struct map *);
+	void (*move_down)(struct Player *, struct map *);
+	void (*move_left)(struct Player *, struct map *);
+	void (*move_right)(struct Player *, struct map *);
+	// action of player
+	void (*pose_bomb)(struct Player *);
+	// things;
+	struct Fifo *mybomb;
+} player, *players;
+void init_player(player *p, game *g);
+int get_birth_pos(map *m);
+void show_info_player(player *p);
+void move_up(player *p, map *m);
+void move_down(player *p, map *m);
+void move_right(player *p, map *m);
+void move_left(player *p, map *m);
+int cal_position(int x, int y, map *m);
+void get_position(player *p);
+void pose_bomb(player *p);
+void in_game(player *p);
+#endif //EDU_1P_C_PROJET_RESEAUX_V3_SRC_PLAYER_H_
+
+
+
+<<../EDU-1P-C-projet_reseaux_v3/include/bomb.h>>
+//
+// Created by XuZY on 2023/11/20.
+//
+#ifndef EDU_1P_C_PROJET_RESEAUX_V3_SRC_BOMB_H_
+#define EDU_1P_C_PROJET_RESEAUX_V3_SRC_BOMB_H_
+#include <stdbool.h>
+typedef struct bomb {
+	int b_x, b_y;
+	int impact_dist;
+	bool Bb;
+	int time_exp;
+} bomb;
+typedef struct NodeB {
+	bomb b;
+	struct NodeB *next;
+} node;
+typedef struct Fifo {
+	node *front;
+	node *rear;
+} fifo;
+void show_all_bomb(fifo *f);
+void show_bomb(bomb *b);
+fifo * create_fifo();
+void enqueue(fifo *f,bomb b);
+bomb dequeue(fifo *f);
+void show_bomb(bomb *b);
+bomb * get_first_bomb(fifo *f);
+bomb * get_sec_bomb(fifo *f);
+#endif //EDU_1P_C_PROJET_RESEAUX_V3_SRC_BOMB_H_
+
+
+
+<<../EDU-1P-C-projet_reseaux_v3/include/game.h>>
+//
+// Created by XuZY on 2023/11/20.
+//
+#ifndef EDU_1P_C_PROJET_RESEAUX_V3_SRC_GAME_H_
+#define EDU_1P_C_PROJET_RESEAUX_V3_SRC_GAME_H_
+#include "map.h"
+typedef struct OneGame{
+	struct map * map;
+}game;
+game * init_game();
+#endif //EDU_1P_C_PROJET_RESEAUX_V3_SRC_GAME_H_
+
+
+
+<<../EDU-1P-C-projet_reseaux_v3/src/game.c>>
+//
+// Created by XuZY on 2023/11/20.
+//
+#include <stdlib.h>
+#include <stdio.h>
+#include "../include/player.h"
+#include "../include/map.h"
+#include "../include/game.h"
+game * init_game(){
+	game * g = (game*)malloc(sizeof(game));
+	if (g == NULL) {
+		exit(EXIT_FAILURE);
+	}
+	g->map = init_map();
+	preprocess_map(g->map);
+//	player * p1 = (player*)malloc(sizeof(player));
+//	if (p1 == NULL) {
+//		free(g);
+//		exit(EXIT_FAILURE);
+//	}
+//	init_player(p1, g);
+//	g->player1 = p1; // Assign the initialized player to the game's player1
+//	get_position(p);
+//	show_by_wall(g->map);
+	return g;
+}
+
+
+
+<<../EDU-1P-C-projet_reseaux_v3/src/bomb.c>>
+//
+// Created by XuZY on 2023/11/20.
+//
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include "../include/bomb.h"
+void show_all_bomb(fifo *f) {
+	node *current = f->front;
+	while (current != NULL) {
+		show_bomb(&current->b);
+		current = current->next;
+	}
+}
+void show_bomb(bomb *b){
+	printf("bomb: <%d,%d>:",b->b_x,b->b_y);
+	printf("{%d}\n",b->Bb);
+}
+fifo * create_fifo(){
+	fifo *q = (fifo*)malloc(sizeof(fifo));
+	q->front = q->rear = NULL;
+	return q;
+}
+void enqueue(fifo *f,bomb b){
+	node *new_node = (node*)malloc(sizeof(node));
+	new_node ->b = b;
+	new_node->next = NULL;
+	if (f->rear == NULL){
+		f->front = f->rear = new_node;
+		return;
+	}
+	f->rear->next = new_node;
+	f->rear = new_node;
+}
+bomb dequeue(fifo *f) {
+	if (f->front == NULL) {
+		printf("No more bomb from you.\n");
+		return (bomb){0, 0, 0, false};
+	}
+	node *temp = f->front;
+	bomb removed_bomb = temp->b;
+	f->front = f->front->next;
+	if (f->front == NULL) {
+		f->rear = NULL;
+	}
+	free(temp);
+	return removed_bomb;
+}
+bomb * get_first_bomb(fifo *f){
+	if(f->front == NULL){
+		return NULL;
+	}
+	return &(f->front->b);
+}
+bomb * get_sec_bomb(fifo *f){
+	if(f->front == NULL){
+		return NULL;
+	}
+	return &(f->front->next->b);
+}
+
+
+<<../EDU-1P-C-projet_reseaux_v3/src/main.c>>
+//
+// Created by XuZY on 2023/11/20.
+//
+#include <stdio.h>
+#include <stdlib.h>
+#include "../include/player.h"
+#include "../include/game.h"
+int main(){
+	int i,numPlayer = 1;
+	game *g = init_game();
+	player *p = (player*)malloc(sizeof(player));
+	init_player(p,g);
+	get_position(p);
+	while (1){
+		show_by_wall(g->map);
+//		for (i = 0;i<numPlayer;i++){
+		in_game(p);
+//		}
+	}
+}
+
+
+<<../EDU-1P-C-projet_reseaux_v3/src/map.c>>
+//
+// Created by XuZY on 2023/11/20.
+//
+#include <stdio.h>
+#include <stdlib.h>
+#include "../include/map.h"
+void create_map1(map *m){
+	m->height = 8;
+	m->width = 24;
+	m->id = 1;
+	m->content = 	"************************"
+								"=----------------------="
+								"=----==============----="
+								"=----------****--------="
+								"=------****------------="
+								"=----==============----="
+								"=----------------------="
+								"************************";
+	m->maps = (wall *)malloc(sizeof(wall)*m->width * m->height);
+}
+map * init_map(){
+	map *m = (map*)malloc(sizeof(map));
+	create_map1(m);
+	return m;
+}
+void show_map(map *m){
+	printf("%d [%d,%d]\n",m->id,m->width,m->height);
+	for (int i = 0; i <m->height ; ++i) {
+		for (int j = 0; j < m->width; ++j) {
+			printf("%c",m->content[i*m->width + j]);
+		}
+		printf("\n");
+	}
+}
+void preprocess_map(map *m){
+	int num;
+	for (int i = 0; i <m->height ; ++i) {
+		for (int j = 0; j < m->width; ++j) {
+			num = i*m->width + j;
+			m->maps[num].w = j;
+			m->maps[num].h = i;
+			switch (m->content[i*m->width + j]) {
+				case '*':{
+					m->maps[num].wallstate = Indes;
+					break;
+				}
+				case '=':{
+					m->maps[num].wallstate = Destr;
+					break;
+				}
+				default:{
+					m->maps[num].wallstate = Empty;
+					break;
+				}
+			}
+		}
+	}
+}
+void show_one_wall(wall *w){
+	switch (w->wallstate) {
+		case 1: printf("=");break;
+		case 2: printf("*");break;
+		case 3: printf("P");break;
+		case 4: printf("&");break;
+		default : printf("-");break;
+	}
+}
+void show_by_wall(map *m){
+	for (int i = 0; i < m->height; ++i) {
+		for (int j = 0; j < m->width; ++j) {
+			show_one_wall(&m->maps[i*m->width + j]);
+		}
+		printf("\n");
+	}
+}
+
+
+
+<<../EDU-1P-C-projet_reseaux_v3/src/player.c>>
+//
+// Created by XuZY on 2023/11/19.
+//
+#include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <string.h>
+#include <time.h>
+#include "../include/player.h"
+#include "../include/bomb.h"
+#include "../include/game.h"
+void init_player(player *p, game *g) {
+	// 初始化玩家位置
+	int pos;
+	pos = get_birth_pos(g->map);
+	p->x = pos % g->map->width;
+	p->y = pos / g->map->width;
+	// 玩家的信息
+	p->gameRef = g; // 玩家所在的游戏
+	p->show_info_player = show_info_player; // 显示玩家的信息
+	p->speed = 1; // 玩家的速度
+	p->impact_dist = 2; // 炸弹的范围
+	p->nb_classic_b = 2; // 普通炸弹的数量
+	p->nbcb = 0;
+	// 玩家的移动
+	p->move_up = move_up;
+	p->move_down = move_down;
+	p->move_left = move_left;
+	p->move_right = move_right;
+	// 放置炸弹
+	p->pose_bomb = pose_bomb;
+	p->mybomb = create_fifo();
+}
+int get_birth_pos(map *m) {
+	int pos, x, y;
+	srand(time(NULL));
+	do {
+		x = rand() % m->width;
+		y = rand() % m->height;
+		pos = y * m->width + x;
+	} while (m->maps[pos].wallstate != Empty);
+	return pos;
+}
+void show_info_player(player *p) {
+	printf("-[%d,%d]", p->x, p->y);
+	show_all_bomb(p->mybomb);
+}
+void move_up(player *p, map *m) {
+	int newX, newY, newP, oldP;
+	oldP = cal_position(p->x, p->y, m);
+	newX = p->x;
+	newY = p->y - p->speed;
+	newP = cal_position(newX, newY, m);
+	if (newY >= 0 && m->maps[newP].wallstate == Empty) {
+		m->maps[oldP].wallstate = Empty;
+		p->y = newY;
+		m->maps[newP].wallstate = Player;
+	}
+}
+void move_down(player *p, map *m) {
+	int newX, newY, newP, oldP;
+	oldP = cal_position(p->x, p->y, m);
+	newX = p->x;
+	newY = p->y + p->speed;
+	newP = cal_position(newX, newY, m);
+	if (m->maps[newP].wallstate == Empty) {
+		m->maps[oldP].wallstate = Empty;
+		p->y = newY;
+		m->maps[newP].wallstate = Player;
+	}
+}
+void move_right(player *p, map *m) {
+	int newX, newY, newP, oldP;
+	oldP = cal_position(p->x, p->y, m);
+	newX = p->x + p->speed;
+	newY = p->y;
+	newP = cal_position(newX, newY, m);
+	if (m->maps[newP].wallstate == Empty) {
+		m->maps[oldP].wallstate = Empty;
+		p->x = newX;
+		m->maps[newP].wallstate = Player;
+	}
+}
+void move_left(player *p, map *m) {
+	int newX, newY, newP, oldP;
+	oldP = cal_position(p->x, p->y, m);
+	newX = p->x - p->speed;
+	newY = p->y;
+	newP = cal_position(newX, newY, m);
+	if (m->maps[newP].wallstate == Empty) {
+		m->maps[oldP].wallstate = Empty;
+		p->x = newX;
+		m->maps[newP].wallstate = Player;
+	}
+}
+int cal_position(int x, int y, map *m) {
+	return y * m->width + x;
+}
+void pose_bomb(player *p) {
+	if (p->nbcb < p->nb_classic_b) {
+		bomb newb;
+		newb.b_x = p->x;
+		newb.b_y = p->y;
+		p->gameRef->map->maps[cal_position(p->x,p->y,p->gameRef->map)].wallstate = Bomb;
+		newb.impact_dist = p->impact_dist;
+		newb.Bb = false;
+		newb.time_exp = clock();
+		enqueue(p->mybomb, newb);
+		p->nbcb++;
+		printf("<pose bomb>");
+		show_bomb(&newb);
+	} else {
+		printf("<nomore avaliable>");
+	}
+}
+void get_position(player *p){
+	int x = p->x;
+	int y = p->y;
+	int position = y * p->gameRef->map->width + x;
+	p->gameRef->map->maps[position].wallstate = Player;
+}
+void in_game(player *p) {
+	if (p == NULL) {
+		perror("player is null");
+	}
+	printf("playing");
+	char input = getchar();
+	printf("\033[H\033[J");
+	p->show_info_player(p);
+	printf("Player position: (%d,%d) - ", p->x, p->y);
+	printf("Enter:\n");
+	switch (input) {
+		case 'w': { // move
+			p->move_up(p, p->gameRef->map);
+			break;
+		}
+		case 's': {// move
+			p->move_down(p, p->gameRef->map);
+			break;
+		}
+		case 'a': {// move
+			p->move_left(p, p->gameRef->map);
+			break;
+		}
+		case 'd': {// move
+			p->move_right(p, p->gameRef->map);
+			break;
+		}
+		case '1': { // poser classic bomb
+			p->pose_bomb(p);
+			break;
+		}
+//		case 'e': { // exploser 1er bomb
+//			dequeue(p->mybomb);
+//			p->nbcb--;
+//			break;
+//		}
+		default: {
+			printf("INVALIDE INPUT");
+			break;
+		}
+	}
+	if (get_first_bomb(p->mybomb) != NULL){
+		int this_x,this_y;
+		if ((clock() - get_first_bomb(p->mybomb)->time_exp) >= TIMEEXP){
+			int this_x = get_first_bomb(p->mybomb)->b_x;
+			int this_y = get_first_bomb(p->mybomb)->b_y;
+			p->gameRef->map->maps[cal_position(this_x,this_y,p->gameRef->map)].wallstate = Empty;
+			dequeue(p->mybomb);
+			p->nbcb--;
+		}else{
+			this_x = get_first_bomb(p->mybomb)->b_x;
+			this_y = get_first_bomb(p->mybomb)->b_y;
+			p->gameRef->map->maps[cal_position(this_x,this_y,p->gameRef->map)].wallstate = Bomb;
+		}
+		if (get_sec_bomb(p->mybomb) != NULL){
+			this_x = get_sec_bomb(p->mybomb)->b_x;
+			this_y = get_sec_bomb(p->mybomb)->b_y;
+			p->gameRef->map->maps[cal_position(this_x,this_y,p->gameRef->map)].wallstate = Bomb;
+		}
+	}
+	while ((input = getchar()) != '\n' && input != EOF) {
+	}
+}
+
+
+

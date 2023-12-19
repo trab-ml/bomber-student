@@ -1,0 +1,556 @@
+<</Users/xuzy/evoluer/School/RESPRO/bomber-student/src/game.c>>
+//
+// Created by XuZY on 2023/11/1.
+//
+
+#include "game.h"
+
+
+game * init_game(){
+	game * g = (game*)malloc(sizeof(game));
+	g->map = init_map();
+	preprocess_map(g->map);
+	player * p1 = (player*)malloc(sizeof(player));
+//	player * p2 = (player*)malloc(sizeof(player));
+	init_player(p1,g->map->width,g->map->height);
+//	init_player(p2,g->map->width,g->map->height);
+	show_by_wall(g->map);
+	return g;
+}
+
+
+//void play_game(game *g){
+//	g->player1
+//}
+
+
+
+
+<</Users/xuzy/evoluer/School/RESPRO/bomber-student/src/bomb.c>>
+//
+// Created by XuZY on 2023/11/1.
+//
+
+#include "../include/bomb.h"
+
+void show_all_bomb(fifo *f) {
+	node *current = f->front;
+	while (current != NULL) {
+		show_bomb(&current->b);
+		current = current->next;
+	}
+}
+
+void show_bomb(bomb *b){
+	printf("bomb: <%d,%d>:",b->b_x,b->b_y);
+	printf("{%d}\n",b->Bb);
+}
+
+
+fifo * create_fifo(){
+	fifo *q = (fifo*)malloc(sizeof(fifo));
+	q->front = q->rear = NULL;
+	return q;
+}
+
+void enqueue(fifo *f,bomb b){
+	node *new_node = (node*)malloc(sizeof(node));
+	new_node ->b = b;
+	new_node->next = NULL;
+
+	if (f->rear == NULL){
+		f->front = f->rear = new_node;
+		return;
+	}
+	f->rear->next = new_node;
+	f->rear = new_node;
+}
+
+bomb dequeue(fifo *f) {
+	if (f->front == NULL) {
+		printf("No more bomb from you.\n");
+		return (bomb){0, 0, 0, false};
+	}
+	node *temp = f->front;
+	bomb removed_bomb = temp->b;
+
+	f->front = f->front->next;
+	if (f->front == NULL) {
+		f->rear = NULL;
+	}
+	free(temp);
+	return removed_bomb;
+}
+
+
+
+<</Users/xuzy/evoluer/School/RESPRO/bomber-student/src/main.c>>
+//
+// Created by XuZY on 2023/10/31.
+//
+
+#include "../include/player.h"
+#include "../include/map.h"
+#include "../include/game.h"
+
+
+int main(){
+//	map *m = init_map();
+//	preprocess_map(m);
+//	show_by_wall(m);
+// -----------------
+//	player p1;
+//	init_player(&p1);
+//	in_action(&p1);
+//	show_map();
+// -----------------
+	game *g = init_game();
+	in_action(g->player1);
+//	show_info_player(g->player1);
+
+}
+
+
+<</Users/xuzy/evoluer/School/RESPRO/bomber-student/src/map.c>>
+//
+// Created by XuZY on 2023/11/1.
+//
+
+#include "../include/map.h"
+
+/**
+	map1 =
+			"************************\n"
+			"=----------------------=\n"
+		 	"=----==============----=\n"
+			"=----------****--------=\n"
+			"=------****------------=\n"
+ 			"=----==============----=\n"
+ 			"=----------------------=\n"
+ 			"************************";
+	map2 =
+			"************************\n"
+			"=----------------------=\n"
+		 	"=----======**======----=\n"
+			"=------*--------*------=\n"
+			"=------*--------*------=\n"
+ 			"=----======**======----=\n"
+ 			"=----------------------=\n"
+ 			"************************";
+**/
+
+void create_map1(map *m){
+//	map *m =(map*)malloc(sizeof(map));
+	m->height = 8;
+	m->width = 24;
+	m->id = 1;
+	m->content = 	"************************"
+								"=----------------------="
+								"=----==============----="
+								"=----------****--------="
+								"=------****------------="
+								"=----==============----="
+								"=----------------------="
+								"************************";
+	m->maps = (wall *)malloc(sizeof(wall)*m->width * m->height);
+}
+
+//void create_map2(){
+//	map *m = (map*)malloc(sizeof(map));
+//	m.height = 8;
+//	m.width = 24;
+//	m.id = 2;
+//	m.content = 	"************************\n"
+//								"=----------------------=\n"
+//								"=----======**======----=\n"
+//								"=------*--------*------=\n"
+//								"=------*--------*------=\n"
+//								"=----======**======----=\n"
+//								"=----------------------=\n"
+//								"************************";
+//}
+
+map * init_map(){
+	map *m = (map*)malloc(sizeof(map));
+	create_map1(m);
+	return m;
+}
+
+void show_map(map *m){
+	printf("%d [%d,%d]\n",m->id,m->width,m->height);
+	for (int i = 0; i <m->height ; ++i) {
+		for (int j = 0; j < m->width; ++j) {
+			printf("%c",m->content[i*m->width + j]);
+		}
+		printf("\n");
+	}
+}
+
+void preprocess_map(map *m){
+	int num;
+	for (int i = 0; i <m->height ; ++i) {
+		for (int j = 0; j < m->width; ++j) {
+			num = i*m->width + j;
+			m->maps[num].w = j;
+			m->maps[num].h = i;
+			switch (m->content[i*m->width + j]) {
+				case '*':{
+					m->maps[num].wallstate = Indes;
+					break;
+				}
+				case '=':{
+					m->maps[num].wallstate = Destr;
+					break;
+				}
+				default:{
+					m->maps[num].wallstate = Empty;
+					break;
+				}
+			}
+		}
+	}
+}
+
+void show_one_wall(wall *w){
+	switch (w->wallstate) {
+		case 1: printf("=");break;
+		case 2: printf("*");break;
+		default : printf("-");break;
+	}
+}
+
+void show_by_wall(map *m){
+	for (int i = 0; i < m->height; ++i) {
+		for (int j = 0; j < m->width; ++j) {
+//			printf("%d,%d",)
+			show_one_wall(&m->maps[i*m->width + j]);
+		}
+		printf("\n");
+	}
+}
+
+
+
+<</Users/xuzy/evoluer/School/RESPRO/bomber-student/src/player.c>>
+//
+// Created by XuZY on 2023/10/31.
+//
+
+#include "../include/player.h"
+
+void init_player(player *p,int w,int h) {
+	// position
+	srand(time(NULL));
+	p->x = rand() % h;
+	p->y = rand() % w;
+	// status
+	p->show_info_player = show_info_player;
+	p->speed = 1;
+	p->impact_dist = 2;
+	p->nb_classic_b = 2;
+	//
+	p->nbcb = 0; //
+	// movement
+	p->move_up = move_up;
+	p->move_down = move_down;
+	p->move_left = move_left;
+	p->move_right = move_right;
+	//
+	p->pose_bomb = pose_bomb;
+	//
+//	init_queue((bomb_queue *)&p->mybomb);
+	p->mybomb = create_fifo();
+//	p->mybomb = (bomb *)malloc(sizeof(bomb) * p->nb_classic_b);
+}
+
+void move_up(player *p) {
+	p->y -= p->speed;
+}
+
+void move_down(player *p) {
+	p->y += p->speed;
+}
+
+void move_right(player *p) {
+	p->x += p->speed;
+}
+
+void move_left(player *p) {
+	p->x -= p->speed;
+}
+
+void pose_bomb(player *p){
+	if (p->nbcb < p->nb_classic_b){
+		bomb newb;
+		newb.b_x = p->x;
+		newb.b_y = p->y;
+		newb.impact_dist = p->impact_dist;
+		newb.Bb = false;
+		enqueue(p->mybomb,newb);
+		p->nbcb++;
+		printf("<pose bomb>");
+		show_bomb(&newb);
+	}else{
+		printf("<nomore avaliable>");
+	}
+}
+
+
+
+void show_info_player(player *p){
+	printf("[%d,%d]\n",p->x,p->y);
+	show_all_bomb(p->mybomb);
+}
+
+void in_action(player *p) {
+	if (p == NULL){
+		perror("player is null");
+	}
+	printf("player is playing");
+	char input;
+	printf("Player position: (%d, %d)\n", p->x, p->y);
+	printf("Enter move (w/a/s/d)\n");
+
+	while ((input = getchar()) != 'q') { // 按 'q' 退出
+		printf("\033[H\033[J");
+		p->show_info_player(p);
+		printf("Player position: (%d,%d) - ", p->x, p->y);
+		printf("Enter:\n");
+		switch (input) {
+
+			case 'w': { // move
+				p->move_up(p);
+				break;
+			}
+			case 's': {// move
+				p->move_down(p);
+				break;
+			}
+			case 'a': {// move
+				p->move_left(p);
+				break;
+			}
+			case 'd': {// move
+				p->move_right(p);
+				break;
+			}
+			case 'p': { // poser bomb
+				p->pose_bomb(p);
+				break;
+			}
+//			case 'z':{ // show player's info
+//				p->show_info_player(p);
+//				break;
+//			}
+			case 'e':{ // exploser 1er bomb
+				dequeue(p->mybomb);
+				p->nbcb--;
+				break;
+			}
+			default:{
+				printf("INVALIDE INPUT");
+				break;
+			}
+		}
+		while((input = getchar()) != '\n' && input != EOF){
+
+		}
+	}
+}
+
+
+<</Users/xuzy/evoluer/School/RESPRO/bomber-student/include/map.h>>
+//
+// Created by XuZY on 2023/11/1.
+//
+
+#ifndef BOMBER_STUDENT_SRC_MAP_H_
+#define BOMBER_STUDENT_SRC_MAP_H_
+
+#include <stdio.h>
+#include <stdlib.h>
+
+
+typedef enum {
+	Empty = 0, // 空地
+	Destr = 1, // 可以破坏的
+	Indes = 2  // 不可破坏的
+}wallstate;
+
+
+/**
+maps: 所有地图的描述列表
+		id: 地图的标识符
+		width: 地图的宽度（单位：格子）
+height: 地图的高度（单位：格子）
+content: 地图的描述
+=: 可以被炸弹爆炸破坏的墙壁
+*: 不可被炸弹爆炸破坏的墙壁
+-: 空闲的格子
+ * */
+
+typedef struct Wall {
+	int w,h;
+	int wallstate;
+}wall;
+
+typedef struct map{
+	int id;
+	int width,height;
+	char* content;
+	wall* maps;
+}map;
+
+
+
+
+
+void create_map1(map *m);
+void show_map(map *m);
+map * init_map();
+void preprocess_map(map *m);
+void show_by_wall(map *m);
+
+#endif //BOMBER_STUDENT_SRC_MAP_H_
+
+
+
+<</Users/xuzy/evoluer/School/RESPRO/bomber-student/include/player.h>>
+//
+// Created by XuZY on 2023/10/31.
+//
+
+#ifndef BOMBER_STUDENT_SRC_PLAYER_H_
+#define BOMBER_STUDENT_SRC_PLAYER_H_
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <string.h>
+#include <stdbool.h>
+#include "../include/bomb.h"
+
+#define LENGTH 100
+#define WIDTH 80
+
+typedef struct Fifo Fifo;
+
+//typedef struct bomb{
+//	int b_x,b_y;
+//	int impact_dist;
+//	bool Bb;
+//}bomb;
+
+typedef struct Player{
+	int x,y; // player's position
+	// status
+	void (*show_info_player)(struct Player *);
+	int speed;
+	int impact_dist;
+	int nb_classic_b; // 普通炸弹
+	int nb_mine; // 地雷数量
+	int nb_remote_n; // 遥控炸弹
+	//
+	int nbcb; // 摆放的炸弹的数量
+	// movement of player
+	void (*move_up)(struct Player *);
+	void (*move_down)(struct Player *);
+	void (*move_left)(struct Player *);
+	void (*move_right)(struct Player *);
+	// action of player
+	void (*pose_bomb)(struct Player *);
+
+	// things;
+	Fifo *mybomb;
+}player,*players;
+
+void init_player(player *p,int w,int h);
+
+void move_up(player *p);
+void move_down(player *p);
+void move_right(player *p);
+void move_left(player *p);
+
+void pose_bomb(player *p);
+
+//void show_bomb(bomb *b);
+
+void show_info_player(player *p);
+
+void in_action(player *p);
+
+
+#endif //BOMBER_STUDENT_SRC_PLAYER_H_
+
+
+
+<</Users/xuzy/evoluer/School/RESPRO/bomber-student/include/bomb.h>>
+//
+// Created by XuZY on 2023/11/1.
+//
+
+#ifndef BOMBER_STUDENT_SRC_BOMB_H_
+#define BOMBER_STUDENT_SRC_BOMB_H_
+
+#include <stdlib.h>
+#include <stdio.h>
+#include "../include/player.h"
+
+typedef struct bomb {
+	int b_x, b_y;
+	int impact_dist;
+	bool Bb;
+} bomb;
+
+typedef struct NodeB {
+	bomb b;
+	struct NodeB *next;
+} node;
+
+typedef struct Fifo {
+	node *front;
+	node *rear;
+} fifo;
+
+
+void show_all_bomb(fifo *f);
+void show_bomb(bomb *b);
+fifo * create_fifo();
+void enqueue(fifo *f,bomb b);
+bomb dequeue(fifo *f);
+
+
+
+
+
+
+
+
+void show_bomb(bomb *b);
+
+#endif //BOMBER_STUDENT_SRC_BOMB_H_
+
+
+
+<</Users/xuzy/evoluer/School/RESPRO/bomber-student/include/game.h>>
+//
+// Created by XuZY on 2023/11/1.
+//
+
+#ifndef BOMBER_STUDENT_SRC_GAME_H_
+#define BOMBER_STUDENT_SRC_GAME_H_
+
+#include "player.h"
+#include "bomb.h"
+#include "map.h"
+
+typedef struct OneGame{
+	map * map;
+	player * player1;
+//	player * player2;
+}game;
+game * init_game();
+#endif //BOMBER_STUDENT_SRC_GAME_H_
+
+
+

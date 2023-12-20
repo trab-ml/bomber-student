@@ -1,9 +1,8 @@
-# Ignorer les fichiers d'exécution
 *.exe
 ./bin
 
-# Ignorer les fichiers de sauvegarde
 *~
 
-# Ignorer les fichiers de configuration de Visual Studio Code
 .vscode/
+
+./python/__pycache__/

@@ -33,8 +33,8 @@ void addClient(clientList *clients, struct sockaddr_in addr, const char *login, 
     strncpy(clients->list[clients->size].login, login, MAX_LOGIN_LEN - 1);
     clients->list[clients->size].login[MAX_LOGIN_LEN - 1] = '\0';
     clients->list[clients->size].lastActivityTime = time(NULL);
-    clients->list[clients->size].playerId;
-    clients->list[clients->size].numPlayer;
+    // clients->list[clients->size].playerId; id of the player in the game | in args
+    // clients->list[clients->size].numPlayer; number of the player in the game
     clients->size++;
 
     printf("[SERVER] Add client %s:%i to clients list, his login is %s\n",

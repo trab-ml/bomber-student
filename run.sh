@@ -33,4 +33,4 @@ open_terminal() {
 open_terminal ./bin/main 49151
 
 # In another terminal, connect to server on port 49151 (nc sur localhost 49151)
-open_terminal nc localhost 49151
+open_terminal python3 ./python_client/client.py

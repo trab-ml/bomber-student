@@ -53,9 +53,9 @@ void handleGameCreate(ThreadArgs *threadArgs)
 
 void handleGameJoin(ThreadArgs *threadArgs)
 {
-    clientList *clients = threadArgs->clients;
+    // clientList *clients = threadArgs->clients;
     // clients->list[clientsPos].playerId;
-    
+
     printf("Handling game join\n");
 }
 

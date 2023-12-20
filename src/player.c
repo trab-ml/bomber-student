@@ -13,14 +13,17 @@
 #include "../include/bomb.h"
 #include "../include/game.h"
 
-void init_player(player *p, game *g) {
+void init_player(player *p, game *g,int i) {
 	// 初始化玩家位置
 	int pos;
+	p->id = i;
 	pos = get_birth_pos(g->map);
 	p->x = pos % g->map->width;
 	p->y = pos / g->map->width;
+	p->isAlive = true;
 	// 玩家的信息
 	p->gameRef = g; // 玩家所在的游戏
+	p->gameRef->ap[i] = p;
 	p->show_info_player = show_info_player; // 显示玩家的信息
 	p->speed = 1; // 玩家的速度
 	p->impact_dist = 2; // 炸弹的范围
@@ -61,7 +64,7 @@ void move_up(player *p, map *m) {
 	if (newY >= 0 && m->maps[newP].wallstate == Empty) {
 		m->maps[oldP].wallstate = Empty;
 		p->y = newY;
-		m->maps[newP].wallstate = Player;
+		m->maps[newP].wallstate = p->id;
 	}
 }
 
@@ -74,7 +77,7 @@ void move_down(player *p, map *m) {
 	if (m->maps[newP].wallstate == Empty) {
 		m->maps[oldP].wallstate = Empty;
 		p->y = newY;
-		m->maps[newP].wallstate = Player;
+		m->maps[newP].wallstate = p->id;
 	}
 }
 
@@ -87,7 +90,7 @@ void move_right(player *p, map *m) {
 	if (m->maps[newP].wallstate == Empty) {
 		m->maps[oldP].wallstate = Empty;
 		p->x = newX;
-		m->maps[newP].wallstate = Player;
+		m->maps[newP].wallstate = p->id;
 	}
 }
 
@@ -100,7 +103,7 @@ void move_left(player *p, map *m) {
 	if (m->maps[newP].wallstate == Empty) {
 		m->maps[oldP].wallstate = Empty;
 		p->x = newX;
-		m->maps[newP].wallstate = Player;
+		m->maps[newP].wallstate = p->id;
 	}
 }
 
@@ -130,7 +133,7 @@ void get_position(player *p){
 	int x = p->x;
 	int y = p->y;
 	int position = y * p->gameRef->map->width + x;
-	p->gameRef->map->maps[position].wallstate = Player;
+	p->gameRef->map->maps[position].wallstate = p->id;
 }
 
 void in_game(player *p) {
@@ -144,6 +147,7 @@ void in_game(player *p) {
 	p->show_info_player(p);
 	printf("Player position: (%d,%d) - ", p->x, p->y);
 	printf("Enter:\n");
+	p->gameRef->map->maps[cal_position(p->x,p->y,p->gameRef->map)].wallstate = p->id;
 	switch (input) {
 		case 'w': { // move
 			p->move_up(p, p->gameRef->map);
@@ -184,12 +188,13 @@ void in_game(player *p) {
 			printf("EXPLOSE");
 			this_x = get_first_bomb(p->mybomb)->b_x;
 			this_y = get_first_bomb(p->mybomb)->b_y;
-			if(in_filed(p,this_x,this_y)){
-				printf("You are dead!");
-				exit(EXIT_SUCCESS);
-			}
+//			if(in_filed(p,this_x,this_y)){
+//				printf("You are dead!");
+//				exit(EXIT_SUCCESS);
+//			}
 			p->gameRef->map->maps[cal_position(this_x,this_y,p->gameRef->map)].wallstate = Empty;
-			dequeue(p->mybomb);
+			bomb b = dequeue(p->mybomb);
+			explose_bomb(&b,p->gameRef);
 			p->nbcb--;
 		}else{
 			this_x = get_first_bomb(p->mybomb)->b_x;
@@ -205,12 +210,52 @@ void in_game(player *p) {
 	while ((input = getchar()) != '\n' && input != EOF) {}
 }
 
-bool in_filed(players p,int x,int y){
-	int this_x = p->x;
-	int this_y = p->y;
-	if ((this_x > x-2 && this_x < x+2) &&(this_y > y-2 && this_y < y+2)){
-		return true;
-	} else{
-		return false;
+//bool in_filed(players p,int x,int y){
+//	int this_x = p->x;
+//	int this_y = p->y;
+//	if ((this_x > x-2 && this_x < x+2) &&(this_y > y-2 && this_y < y+2)){
+//		return true;
+//	} else{
+//		return false;
+//	}
+//}
+
+void explose_bomb(bomb *b, game *g) {
+	int dx, dy;
+	int range;
+	int bomb_x, bomb_y;
+	range = b->impact_dist;
+	bomb_x = b->b_x;
+	bomb_y = b->b_y;
+
+	for (int r = 0; r <= range; r++) {
+		for (dy = -r; dy <= r; dy++) {
+			for (dx = -r; dx <= r; dx++) {
+				int pos = cal_position(bomb_x + dx, bomb_y + dy, g->map);
+				if (pos >= 0 && pos < g->map->width * g->map->height) {
+					affect(g, bomb_x + dx, bomb_y + dy);
+				}
+			}
+		}
 	}
+}
+
+void affect(game *g,int x,int y){
+	int i;
+	if (x < 0 || x >= g->map->width || y < 0 || y >= g->map->height){
+		return;
+	}
+	int pos = y * g->map->width + x ;
+	printf("%d|",pos);
+	if (g->map->maps[pos].wallstate == Destr){
+		g->map->maps[pos].wallstate = Empty;
+	}
+	for (i = 0;i<g->numPlayers;i++){
+		if (x == g->ap[i]->x && y == g->ap[i]->y){
+			g->ap[i]->isAlive = false;
+			g->map->maps[pos].wallstate = Empty;
+		}
+	}
+//	if (g->map->maps[pos] == Player){
+//	}
 }

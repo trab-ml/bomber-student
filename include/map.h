@@ -7,11 +7,11 @@
 
 
 typedef enum {
-	Empty = 0, // 空地
-	Destr = 1, // 可以破坏的
-	Indes = 2,  // 不可破坏的
-	Player = 3,
-	Bomb = 4
+	Empty = 5, // 空地
+	Destr = 6, // 可以破坏的
+	Indes = 7,  // 不可破坏的
+	Player = 8,
+	Bomb = 9
 }wallstate;
 
 typedef struct Wall {

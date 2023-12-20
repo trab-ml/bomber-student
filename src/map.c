@@ -65,11 +65,12 @@ void preprocess_map(map *m){
 
 void show_one_wall(wall *w){
 	switch (w->wallstate) {
-		case 1: printf("=");break;
-		case 2: printf("*");break;
-		case 3: printf("P");break;
-		case 4: printf("&");break;
-		default : printf("-");break;
+		case Destr: printf("=");break;
+		case Indes: printf("*");break;
+		case Player: printf("P");break;
+		case Bomb: printf("&");break;
+		case Empty: printf("-");break;
+		default: printf("%d",w->wallstate);break;
 	}
 }
 

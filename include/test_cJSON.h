@@ -10,7 +10,7 @@
 #define ERR_MSG_SIZE 18
 #define INITIAL_CAPACITY 10
 
-// Infos sur une map
+// Info about a map
 typedef struct {
     int id;
     int width;
@@ -18,14 +18,14 @@ typedef struct {
     char *content;
 } mapData;
 
-// Infos sur une liste de maps
+// The mapslist
 typedef struct {
     mapData *list;
     unsigned int capacity;
     unsigned int size;
 } mapsData;
 
-// Lorsque le client fait : GET maps/list
+// Info about the GET maps/list query
 typedef struct {
     mapsData mapList;
     int nbMapsList;
@@ -34,11 +34,19 @@ typedef struct {
     char *message;
 } queryGetMapsList;
 
+// Container for the database
+typedef struct {
+    queryGetMapsList mapsList;
+    int is_initialized;
+} DatabaseContainer;
+
 void initGetResponse(queryGetMapsList *database);
+void initializeDatabase();
 void addMap(queryGetMapsList *database, mapData map);
 void freeMapsData(mapsData *mapList);
 char *parseInJSON(queryGetMapsList *database);
 char *getResponseInJSON(queryGetMapsList *responseToGetMapsList);
+char *getResponseInJSONFromDatabase();
 char *getQueryErrorMessage(bool unknownErr);
 
 #endif

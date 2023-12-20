@@ -3,15 +3,17 @@
 #include <string.h>
 #include "test_cJSON.h"
 
+static DatabaseContainer database;
+
 /**
- * @brief initialise JSON response for "GET maps/list" request
+ * @brief initialize JSON response for "GET maps/list" request
  * @param database the structure containing the infos to convert to JSON
  * @return void
  */
 void initGetResponse(queryGetMapsList *database)
 {
     database->mapList.list = malloc(INITIAL_CAPACITY * sizeof(mapData));
-    if (database->mapList.list == NULL)
+    if (!database->mapList.list)
     {
         handleError(MALLOC_ERROR);
     }
@@ -31,12 +33,24 @@ void initGetResponse(queryGetMapsList *database)
                                     "=----==============----="
                                     "=----------------------="
                                     "************************")};
-
     addMap(database, map);
     database->action = strdup(action);
     database->statut = strdup(statut);
     database->message = strdup(message);
     database->nbMapsList = nbMapsList;
+}
+
+void initializeDatabase() {
+    if (!database.is_initialized) {
+        initGetResponse(&database.mapsList);
+        database.is_initialized = 1;
+    }
+}
+
+char* getResponseInJSONFromDatabase() {
+    initializeDatabase();
+    char* jsonStr = parseInJSON(&database.mapsList);
+    return jsonStr;
 }
 
 /**
@@ -102,7 +116,7 @@ char *parseInJSON(queryGetMapsList *database)
     for (size_t i = 0; i < database->mapList.size; i++)
     {
         cJSON *mapObject = cJSON_CreateObject();
-        cJSON_AddNumberToObject(mapObject, "id", database->mapList.list[i].id);
+        cJSON_AddNumberToObject(mapObject, "id", i);
         cJSON_AddNumberToObject(mapObject, "width", database->mapList.list[i].width);
         cJSON_AddNumberToObject(mapObject, "height", database->mapList.list[i].height);
         cJSON_AddStringToObject(mapObject, "content", database->mapList.list[i].content);
@@ -157,8 +171,6 @@ char *getQueryErrorMessage(bool unknowErr)
 
     // Convert JSON object to string
     char *jsonStr = cJSON_Print(root);
-
-    // printf("errMsg =>\n%s\n", jsonStr);
 
     // Delete JSON object
     cJSON_Delete(root);

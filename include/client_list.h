@@ -7,16 +7,17 @@
 // Maximum length of a login
 #define MAX_LOGIN_LEN 20
 #define NEW_CLIENT_MESSAGE_FORMAT "[SERVER] New client joined: %s\n"
-
-extern const unsigned int BUFFER_LEN;
-extern const unsigned int MAX_MISS;
-extern const unsigned int CLIENT_BLOC_SIZE;
+#define BUFFER_LEN 1024
+#define MAX_MISS 128
+#define CLIENT_BLOC_SIZE 1024
 
 // Client info
 typedef struct {
     struct sockaddr_in addr;
     char login[MAX_LOGIN_LEN];
     int client_socket;
+    int playerId;
+    int numPlayer;
     time_t lastActivityTime;
 } clientInfo;
 

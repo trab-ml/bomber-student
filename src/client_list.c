@@ -7,10 +7,6 @@
 #include "error_handler.h"
 #include "client_list.h"
 
-const unsigned int BUFFER_LEN = 1024;
-const unsigned int MAX_MISS = 128;
-const unsigned int CLIENT_BLOC_SIZE = 1024;
-
 /**
  * @brief initialise the list of clients
  * @param clients the list of clients
@@ -37,12 +33,14 @@ void addClient(clientList *clients, struct sockaddr_in addr, const char *login, 
     strncpy(clients->list[clients->size].login, login, MAX_LOGIN_LEN - 1);
     clients->list[clients->size].login[MAX_LOGIN_LEN - 1] = '\0';
     clients->list[clients->size].lastActivityTime = time(NULL);
+    clients->list[clients->size].playerId;
+    clients->list[clients->size].numPlayer;
     clients->size++;
 
-    // printf("[SERVER] Add client %s:%i to clients list, his login is %s\n",
-    //         inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), login);
+    printf("[SERVER] Add client %s:%i to clients list, his login is %s\n",
+            inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), login);
 
-    // Broadcast the new client information to all clients
+    // Broadcast the new client login to all clients
     broadcastNewClient(clients, login);
 }
 

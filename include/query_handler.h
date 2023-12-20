@@ -3,20 +3,18 @@
 
 #include "client_list.h"
 
-#define DISCONNECTED_MESSAGE "Disconnected"
-
 // Handler function prototypes
-void handleGetMapsList(int clientIndex, int client_socket, clientList *clients);
-void handleGameList(int clientIndex, int client_socket, clientList *clients);
-void handleGameCreate(int clientIndex, int client_socket, clientList *clients);
-void handleGameJoin(int clientIndex, int client_socket, clientList *clients);
-void handlePlayerMove(int clientIndex, int client_socket, clientList *clients);
-void handleAttackBomb(int clientIndex, int client_socket, clientList *clients);
-void handleAttackRemoteGo(int clientIndex, int client_socket, clientList *clients);
-void handleObjectNew(int clientIndex, int client_socket, clientList *clients);
-void handleExit(int clientIndex, int client_socket, clientList *clients);
+void handleGetMapsList(ThreadArgs *threadArgs);
+void handleGameList(ThreadArgs *threadArgs);
+void handleGameCreate(ThreadArgs *threadArgs);
+void handleGameJoin(ThreadArgs *threadArgs);
+void handlePlayerMove(ThreadArgs *threadArgs);
+void handleAttackBomb(ThreadArgs *threadArgs);
+void handleAttackRemoteGo(ThreadArgs *threadArgs);
+void handleObjectNew(ThreadArgs *threadArgs);
+void handleExit(ThreadArgs *threadArgs);
 void handleUnsupported(int client_socket);
-void processClientMessage(int client_socket, const char *buffer, clientList *clients);
+void processClientMessage(ThreadArgs *threadArgs);
 
 // Constants for (query, handler) pairs
 #define GET_MAPS_LIST_QUERY "GET maps/list"
@@ -32,7 +30,7 @@ void processClientMessage(int client_socket, const char *buffer, clientList *cli
 // Struct for (query, handler) pairs
 typedef struct {
     const char *query;
-    void (*handler)(int, int, clientList*);
+    void (*handler)(ThreadArgs *threadArgs);
 } QueryHandler;
 
 // Handlers array

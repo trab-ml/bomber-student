@@ -29,17 +29,18 @@ void sendMessageAndExit(ThreadArgs *args, const char *message)
  * @param acknowledgmentOfReceipt Acknowledgment of receipt
  * @return true if the message is valid, false otherwise
  */
-bool checkTriggerMessage(ThreadArgs *args, char *buffer, const char *expectedMessage, const char *acknowledgmentOfReceipt)
+bool checkTriggerMessage(ThreadArgs *args, char *buffer)
 {
-    int expectedMsgLen = strlen(expectedMessage);
+    int expectedMsgLen = strlen(LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE);
     int currentBufferLen = strlen(buffer);
 
-    if (currentBufferLen - 1 != expectedMsgLen || strncmp(buffer, expectedMessage, expectedMsgLen) != 0)
+    if (strcmp(buffer, LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE) != 0 && (currentBufferLen - 1 != expectedMsgLen || strcmp(buffer, LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE) != 0)) // -1 to not count \n of the terminal
     {
         return false;
     }
 
-    sendMessage(args->client_socket, acknowledgmentOfReceipt);
+    printf("[SERVER] %s:%i is looking for a bomberstudent server.\n", inet_ntoa(args->client_address.sin_addr), ntohs(args->client_address.sin_port));
+    sendMessage(args->client_socket, SERVER_HELLO_MESSAGE);
     return true;
 }
 
@@ -62,7 +63,7 @@ bool isConnectionClosed(int len, const struct sockaddr_in *client_address, Threa
  * @param buffer Received message
  * @return true if the client is looking for a bomberstudent server, false otherwise
  */
-bool listenClientsLookingForServer(ThreadArgs *args, char *buffer)
+bool isLookingForServer(ThreadArgs *args, char *buffer)
 {
     memset(buffer, 0, BUFFER_LEN + 1);
     int len = recv(args->client_socket, buffer, BUFFER_LEN, 0);
@@ -75,7 +76,26 @@ bool listenClientsLookingForServer(ThreadArgs *args, char *buffer)
         return false;
     }
 
-    return checkTriggerMessage(args, buffer, LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE, SERVER_HELLO_MESSAGE);
+    return checkTriggerMessage(args, buffer);
+}
+
+void closeSocket(ThreadArgs *args)
+{
+    if (close(args->client_socket) != 0)
+    {
+        handleError(SOCKET_CLOSE_ERROR);
+    }
+
+    freeThreadArgs(args);
+    pthread_exit(NULL);
+    joinAndFreeThread(&threads[args->thread_id]);
+    exit(EXIT_SUCCESS);
+}
+
+bool isCompliantLogin(char *login)
+{
+    int loginLen = strlen(login);
+    return loginLen >= CLIENT_LOGIN_MIN_SIZE && loginLen <= CLIENT_LOGIN_MAX_SIZE;
 }
 
 /**
@@ -88,29 +108,35 @@ bool listenClientsLookingForServer(ThreadArgs *args, char *buffer)
 void *handleClientThread(void *args)
 {
     ThreadArgs *threadArgs = (ThreadArgs *)args;
-    int client_socket = threadArgs->client_socket;
-    struct sockaddr_in *client_address = &(threadArgs->client_address);
-    clientList *clients = threadArgs->clients;
 
     char buffer[BUFFER_LEN + 1];
-    int len, queryLen;
 
-    // still listening clients who are looking for a bomberstudent server
-    if (listenClientsLookingForServer(threadArgs, buffer))
+    // while (true)
+    if (isLookingForServer(threadArgs, buffer))
     {
+        int client_socket = threadArgs->client_socket;
+        struct sockaddr_in *client_address = &(threadArgs->client_address);
+        clientList *clients = threadArgs->clients;
+        int len;
+
+        printf("[SERVER] received '%s'\n", buffer);
+
         while (true)
         {
+            // printf("[SERVER] Waiting for message...\n");
+
             memset(buffer, 0, sizeof(buffer)); // Empty the buffer
             len = recv(client_socket, buffer, BUFFER_LEN, 0);
             buffer[len] = '\0';
-            queryLen = strlen("exit");
+            strncpy(threadArgs->buffer, buffer, len + 1);
 
-            if (isConnectionClosed(len, client_address, threadArgs) || (len - 1 == queryLen && strncmp(buffer, "exit", queryLen) == 0))
+            if (isConnectionClosed(len, client_address, threadArgs))
             {
-                printf("exiting\n");
-                close(client_socket);
-                break;
+                printf("[SERVER] Exiting...\n");
+                closeSocket(threadArgs);
             }
+
+            // printf("[SERVER] Received message from %s:%i: %s\n", inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port), buffer);
 
             // Lock the clients list mutex
             pthread_mutex_lock(&clientsMutex);
@@ -119,19 +145,21 @@ void *handleClientThread(void *args)
             unsigned pos = findClient(client_address, clients);
             if (pos < clients->size)
             {
+                printf("[SERVER] processing...\n");
                 clients->list[pos].lastActivityTime = time(NULL);
-                processClientMessage(client_socket, buffer, clients);
+                processClientMessage(threadArgs);
             }
             else
             {
+                printf("[SERVER] not a client!\n");
                 // Handle new client registration
-                if (len + 1 >= CLIENT_LOGIN_SIZE)
+                if (isCompliantLogin(buffer))
                 {
-                    sendMessage(threadArgs->client_socket, "login too long!\n");
+                    addClient(clients, *client_address, buffer, client_socket);
                 }
                 else
                 {
-                    addClient(clients, *client_address, buffer, client_socket);
+                    sendMessage(client_socket, "Invalid login\n");
                 }
             }
 
@@ -140,13 +168,10 @@ void *handleClientThread(void *args)
         }
     }
 
-    freeThreadArgs(threadArgs);
-    pthread_exit(NULL);
-    joinAndFreeThread(&threads[threadArgs->thread_id]);
-    close(client_socket);
-    exit(EXIT_SUCCESS);
+    printf("[SERVER] Done with handleClientThread fct...\n");
 
-    return NULL;
+    // still listening clients who are looking for a bomberstudent server
+    return handleClientThread(threadArgs);
 }
 
 /**
@@ -192,6 +217,7 @@ ThreadArgs *initThreadArgs(int client_socket, struct sockaddr_in client_address,
     }
 
     args->thread_id = threadIndex++;
+    args->client_index = -1;
     args->client_socket = client_socket;
     args->client_address = client_address;
     args->clients = clients;

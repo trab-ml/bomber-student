@@ -14,6 +14,7 @@ game * init_game(int numPlayer){
 	if (g == NULL) {
 		exit(EXIT_FAILURE);
 	}
+	pthread_mutex_init(&g->lock,NULL);
 	g->ap = (player**)malloc(sizeof(player*) * numPlayer);
 	for (int i = 0; i < numPlayer; i++) {
 		g->ap[i] = NULL;

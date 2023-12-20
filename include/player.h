@@ -7,14 +7,10 @@
 
 #include "bomb.h"
 #include "game.h"
+#include <pthread.h>
 #define TIMEEXP 300 // ms
 
 
-// --------
-
-// --------
-
-// --------
 typedef struct Player {
 	int x, y; // player's position
 	bool isAlive;
@@ -25,8 +21,8 @@ typedef struct Player {
 	int speed;
 	int impact_dist;
 	int nb_classic_b; // 普通炸弹
-	int nb_mine; // 地雷数量
-	int nb_remote_n; // 遥控炸弹
+//	int nb_mine; // 地雷数量
+//	int nb_remote_n; // 遥控炸弹
 
 	//
 	int nbcb; // 摆放的炸弹的数量
@@ -59,8 +55,10 @@ void get_position(player *p);
 void pose_bomb(player *p);
 
 void in_game(player *p);
-bool in_filed(players p,int x,int y);
+//void get_game_input(int id,char action,game *g);
 
+bool in_filed(players p,int x,int y);
+void refresh(player *p);
 // ----
 void explose_bomb(bomb *b,game *g);
 void affect(game *g,int x,int y);

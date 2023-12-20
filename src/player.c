@@ -56,6 +56,7 @@ void show_info_player(player *p) {
 }
 
 void move_up(player *p, map *m) {
+//	pthread_mutex_lock(&p->gameRef->lock);
 	int newX, newY, newP, oldP;
 	oldP = cal_position(p->x, p->y, m);
 	newX = p->x;
@@ -66,9 +67,11 @@ void move_up(player *p, map *m) {
 		p->y = newY;
 		m->maps[newP].wallstate = p->id;
 	}
+//	pthread_mutex_unlock(&p->gameRef->lock);
 }
 
 void move_down(player *p, map *m) {
+//	pthread_mutex_lock(&p->gameRef->lock);
 	int newX, newY, newP, oldP;
 	oldP = cal_position(p->x, p->y, m);
 	newX = p->x;
@@ -79,9 +82,11 @@ void move_down(player *p, map *m) {
 		p->y = newY;
 		m->maps[newP].wallstate = p->id;
 	}
+//	pthread_mutex_unlock(&p->gameRef->lock);
 }
 
 void move_right(player *p, map *m) {
+//	pthread_mutex_lock(&p->gameRef->lock);
 	int newX, newY, newP, oldP;
 	oldP = cal_position(p->x, p->y, m);
 	newX = p->x + p->speed;
@@ -92,9 +97,11 @@ void move_right(player *p, map *m) {
 		p->x = newX;
 		m->maps[newP].wallstate = p->id;
 	}
+//	pthread_mutex_unlock(&p->gameRef->lock);
 }
 
 void move_left(player *p, map *m) {
+//	pthread_mutex_lock(&p->gameRef->lock);
 	int newX, newY, newP, oldP;
 	oldP = cal_position(p->x, p->y, m);
 	newX = p->x - p->speed;
@@ -105,6 +112,7 @@ void move_left(player *p, map *m) {
 		p->x = newX;
 		m->maps[newP].wallstate = p->id;
 	}
+//	pthread_mutex_unlock(&p->gameRef->lock);
 }
 
 int cal_position(int x, int y, map *m) {
@@ -112,6 +120,7 @@ int cal_position(int x, int y, map *m) {
 }
 
 void pose_bomb(player *p) {
+//	pthread_mutex_lock(&p->gameRef->lock);
 	if (p->nbcb < p->nb_classic_b) {
 		bomb newb;
 		newb.b_x = p->x;
@@ -127,6 +136,7 @@ void pose_bomb(player *p) {
 	} else {
 		printf("<nomore avaliable>");
 	}
+//	pthread_mutex_unlock(&p->gameRef->lock);
 }
 
 void get_position(player *p){
@@ -135,9 +145,7 @@ void get_position(player *p){
 	int position = y * p->gameRef->map->width + x;
 	p->gameRef->map->maps[position].wallstate = p->id;
 }
-
 void in_game(player *p) {
-
 	if (p == NULL) {
 		perror("player is null");
 	}
@@ -165,18 +173,10 @@ void in_game(player *p) {
 			p->move_right(p, p->gameRef->map);
 			break;
 		}
-		case '1': { // poser classic bomb
+		case 'p': { // poser classic bomb
 			p->pose_bomb(p);
 			break;
 		}
-//		case '2': {// poser mine
-//			p->pose_bomb()
-//		}
-//		case 'e': { // exploser 1er bomb
-//			dequeue(p->mybomb);
-//			p->nbcb--;
-//			break;
-//		}
 		default: {
 			printf("INVALIDE INPUT");
 			break;
@@ -188,10 +188,6 @@ void in_game(player *p) {
 			printf("EXPLOSE");
 			this_x = get_first_bomb(p->mybomb)->b_x;
 			this_y = get_first_bomb(p->mybomb)->b_y;
-//			if(in_filed(p,this_x,this_y)){
-//				printf("You are dead!");
-//				exit(EXIT_SUCCESS);
-//			}
 			p->gameRef->map->maps[cal_position(this_x,this_y,p->gameRef->map)].wallstate = Empty;
 			bomb b = dequeue(p->mybomb);
 			explose_bomb(&b,p->gameRef);
@@ -210,15 +206,37 @@ void in_game(player *p) {
 	while ((input = getchar()) != '\n' && input != EOF) {}
 }
 
-//bool in_filed(players p,int x,int y){
-//	int this_x = p->x;
-//	int this_y = p->y;
-//	if ((this_x > x-2 && this_x < x+2) &&(this_y > y-2 && this_y < y+2)){
-//		return true;
-//	} else{
-//		return false;
-//	}
-//}
+
+void refresh(player *p){
+	if (p == NULL){
+		perror("player is null");
+		return;
+	}
+	printf("playing\n");
+	p->show_info_player(p);
+	printf("Player position: (%d,%d)\n", p->x, p->y);
+	if (get_first_bomb(p->mybomb) != NULL){
+		int this_x,this_y;
+		if ((clock() - get_first_bomb(p->mybomb)->time_exp) >= TIMEEXP){
+			printf("EXPLOSE");
+			this_x = get_first_bomb(p->mybomb)->b_x;
+			this_y = get_first_bomb(p->mybomb)->b_y;
+			p->gameRef->map->maps[cal_position(this_x,this_y,p->gameRef->map)].wallstate = Empty;
+			bomb b = dequeue(p->mybomb);
+			explose_bomb(&b,p->gameRef);
+			p->nbcb--;
+		}else{
+			this_x = get_first_bomb(p->mybomb)->b_x;
+			this_y = get_first_bomb(p->mybomb)->b_y;
+			p->gameRef->map->maps[cal_position(this_x,this_y,p->gameRef->map)].wallstate = Bomb;
+		}
+		if (get_sec_bomb(p->mybomb) != NULL){
+			this_x = get_sec_bomb(p->mybomb)->b_x;
+			this_y = get_sec_bomb(p->mybomb)->b_y;
+			p->gameRef->map->maps[cal_position(this_x,this_y,p->gameRef->map)].wallstate = Bomb;
+		}
+	}
+}
 
 void explose_bomb(bomb *b, game *g) {
 	int dx, dy;
@@ -256,6 +274,4 @@ void affect(game *g,int x,int y){
 			g->map->maps[pos].wallstate = Empty;
 		}
 	}
-//	if (g->map->maps[pos] == Player){
-//	}
 }

@@ -7,13 +7,14 @@
 
 #include "map.h"
 #include "player.h"
-
+#include <pthread.h>
 struct Player ;
 
 typedef struct OneGame{
 	struct map * map;
 	int numPlayers;
 	struct Player **ap;
+	pthread_mutex_t lock;
 }game;
 
 game * init_game(int numPlayer);

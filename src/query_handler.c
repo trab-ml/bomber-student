@@ -24,76 +24,63 @@ void handleGetMapsList(ThreadArgs *threadArgs)
 void handleGameList(ThreadArgs *threadArgs)
 {
     printf("Handling game list\n");
+    sendMessage(threadArgs->client_socket, "game list...\n");
 }
 
 void handleGameCreate(ThreadArgs *threadArgs)
 {
     printf("Handling game create\n");
+    sendMessage(threadArgs->client_socket, "game create...\n");
 }
-
-// int testmain(){
-// 	int i,numPlayer = 2;
-// 	game *g = init_game(numPlayer);
-// 	pthread_t threads[numPlayer];
-// 	g->numPlayers = numPlayer;
-// 	player  **p = (player **)malloc(sizeof(player*) * numPlayer);
-// 	for(i = 0;i<numPlayer;i++){
-// 		p[i] = (player*)malloc(sizeof(player));
-// 		init_player(p[i],g,i);
-// 		get_position(p[i]);
-// 		g->ap[i] = p[i];
-// 		pthread_create(&threads[i],NULL,player_thread,(void *)g->ap[i]);
-// 	}
-// 	for (i = 0; i < numPlayer; ++i) {
-// 		pthread_join(threads[i],NULL);
-// 	}
-// 	pthread_mutex_destroy(&g->lock);
-// 	return 0;
-// }
 
 void handleGameJoin(ThreadArgs *threadArgs)
 {
-    // clientList *clients = threadArgs->clients;
-    // clients->list[clientsPos].playerId;
-
-    printf("Handling game join\n");
+    clientList *clients = threadArgs->clients;
+    printf("Player %s join the game\n", clients->list[threadArgs->client_index].login);
+    sendMessage(threadArgs->client_socket, "game joined...\n");
 }
 
 void handlePlayerMove(ThreadArgs *threadArgs)
 {
     printf("Handling player move\n");
+    sendMessage(threadArgs->client_socket, "player move...\n");
 }
 
 void handleAttackBomb(ThreadArgs *threadArgs)
 {
     printf("Handling attack bomb\n");
+    sendMessage(threadArgs->client_socket, "attack bomb...\n");
 }
 
 void handleAttackRemoteGo(ThreadArgs *threadArgs)
 {
     printf("Handling attack remote go\n");
+    sendMessage(threadArgs->client_socket, "attack remote go...\n");
 }
 
 void handleObjectNew(ThreadArgs *threadArgs)
 {
     printf("Handling object new\n");
+    sendMessage(threadArgs->client_socket, "object new...\n");
 }
 
 void handleExit(ThreadArgs *threadArgs)
 {
     clientList *clients = threadArgs->clients;
-    printf("Closing socket\n");
     if (close(threadArgs->client_socket) != 0)
     {
         printf("Error closing socket\n");
         handleError(SOCKET_CLOSE_ERROR);
     }
     clients->list[threadArgs->client_index] = clients->list[--clients->size];
+    printf("Closing socket\n");
+    closeSocket(threadArgs);
 }
 
 void handleUnsupported(int client_socket)
 {
     printf("Handling unsupported request\n");
+    sendMessage(client_socket, "Unsupported request\n");
 }
 
 /**
@@ -106,11 +93,9 @@ void handleUnsupported(int client_socket)
 void processClientMessage(ThreadArgs *threadArgs)
 {
     printf("[SERVER] (%ld chars) in buffer: `%s`\n", strlen(threadArgs->buffer), threadArgs->buffer);
-    // printf("[SERVER] (%ld chars) expected for GET_MAPS_LIST\n", strlen(GET_MAPS_LIST_QUERY));
     int i, queryLen;
     for (i = 0; handlers[i].query != NULL; i++)
     {
-        // printf("[SERVER] Comparing `%s` with `%s`\n", threadArgs->buffer, handlers[i].query);
         queryLen = strlen(handlers[i].query);
         if ((strcmp(threadArgs->buffer, handlers[i].query) == 0)
             || (strlen(threadArgs->buffer) - 1 == queryLen && strncmp(threadArgs->buffer, handlers[i].query, queryLen) == 0)) // -1 to remove \n of the terminal

@@ -38,7 +38,7 @@ void addClient(clientList *clients, struct sockaddr_in addr, const char *login, 
     clients->size++;
 
     printf("[SERVER] Add client %s:%i to clients list, his login is %s\n",
-            inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), login);
+           inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), login);
 
     // Broadcast the new client login to all clients
     broadcastNewClient(clients, login);
@@ -81,13 +81,16 @@ unsigned findClientBySocket(int client_socket, const clientList *clients)
     return clients->size;
 }
 
-void freeClientList(clientList *clients) {
-    if (clients == NULL) {
+void freeClientList(clientList *clients)
+{
+    if (clients == NULL)
+    {
         return;
     }
 
     // Free the memory of each client's login
-    for (unsigned int i = 0; i < clients->size; ++i) {
+    for (unsigned int i = 0; i < clients->size; ++i)
+    {
         free(clients->list[i].login);
     }
 
@@ -107,9 +110,13 @@ void broadcastNewClient(const clientList *clients, const char *newClientLogin)
 {
     for (unsigned i = 0; i < clients->size; i++)
     {
-        // Skip broadcasting to the new client itself
+        // Instead of broadcasting to the new client, we say welcome to him
         if (strcmp(clients->list[i].login, newClientLogin) == 0)
         {
+            // Say welcome to new player
+            char welcomeMessage[strlen(WELCOME_MESSAGE_FORMAT) + strlen(newClientLogin) + 1];
+            snprintf(welcomeMessage, sizeof(welcomeMessage), WELCOME_MESSAGE_FORMAT, newClientLogin);
+            sendMessage(clients->list[i].client_socket, welcomeMessage);
             continue;
         }
 

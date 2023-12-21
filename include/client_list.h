@@ -6,7 +6,8 @@
 
 // Maximum length of a login
 #define MAX_LOGIN_LEN 20
-#define NEW_CLIENT_MESSAGE_FORMAT "[SERVER] New client joined: %s\n"
+#define NEW_CLIENT_MESSAGE_FORMAT "[SERVER] Player %s joined the game\n"
+#define WELCOME_MESSAGE_FORMAT "[SERVER] Welcome %s\n"
 #define BUFFER_LEN 1024
 #define MAX_MISS 128
 #define CLIENT_BLOC_SIZE 1024

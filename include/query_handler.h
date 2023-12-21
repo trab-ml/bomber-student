@@ -25,7 +25,7 @@ void processClientMessage(ThreadArgs *threadArgs);
 #define ATTACK_BOMB_QUERY "POST attack/bomb"
 #define ATTACK_REMOTE_GO_QUERY "POST attack/remote/go"
 #define OBJECT_NEW_QUERY "POST object/new"
-#define EXIT_QUERY "exit"
+#define EXIT_QUERY "POST exit"
 
 // Struct for (query, handler) pairs
 typedef struct {

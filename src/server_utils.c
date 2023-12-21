@@ -111,20 +111,18 @@ void *handleClientThread(void *args)
 
     char buffer[BUFFER_LEN + 1];
 
-    // while (true)
     if (isLookingForServer(threadArgs, buffer))
     {
         int client_socket = threadArgs->client_socket;
         struct sockaddr_in *client_address = &(threadArgs->client_address);
         clientList *clients = threadArgs->clients;
         int len;
+        unsigned clientPos;
 
-        printf("[SERVER] received '%s'\n", buffer);
+        // printf("[SERVER] received '%s'\n", buffer);
 
         while (true)
         {
-            // printf("[SERVER] Waiting for message...\n");
-
             memset(buffer, 0, sizeof(buffer)); // Empty the buffer
             len = recv(client_socket, buffer, BUFFER_LEN, 0);
             buffer[len] = '\0';
@@ -142,16 +140,16 @@ void *handleClientThread(void *args)
             pthread_mutex_lock(&clientsMutex);
 
             // Access/modification of clients list
-            unsigned pos = findClient(client_address, clients);
-            if (pos < clients->size)
+            clientPos = findClientBySocket(client_socket, clients);
+            if (clientPos < clients->size)
             {
                 printf("[SERVER] processing...\n");
-                clients->list[pos].lastActivityTime = time(NULL);
+                clients->list[clientPos].lastActivityTime = time(NULL);
+                threadArgs->client_index = clientPos;
                 processClientMessage(threadArgs);
             }
             else
             {
-                printf("[SERVER] not a client!\n");
                 // Handle new client registration
                 if (isCompliantLogin(buffer))
                 {

@@ -27,7 +27,7 @@
 typedef struct
 {
     int thread_id;
-    int client_index;
+    unsigned client_index;
     int client_socket;
     struct sockaddr_in client_address;
     char buffer[BUFFER_LEN + 1];

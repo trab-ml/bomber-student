@@ -34,7 +34,7 @@ bool checkTriggerMessage(ThreadArgs *args, char *buffer)
     int expectedMsgLen = strlen(LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE);
     int currentBufferLen = strlen(buffer);
 
-    if (strcmp(buffer, LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE) != 0 && (currentBufferLen - 1 != expectedMsgLen || strcmp(buffer, LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE) != 0)) // -1 to not count \n of the terminal
+    if (strcmp(buffer, LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE) != 0 && (currentBufferLen - 1 != expectedMsgLen || strncmp(buffer, LOOKING_FOR_BOMBERSTUDENT_SERVER_MESSAGE, expectedMsgLen) != 0)) // -1 to not count \n of the terminal
     {
         return false;
     }
@@ -165,8 +165,6 @@ void *handleClientThread(void *args)
             pthread_mutex_unlock(&clientsMutex);
         }
     }
-
-    printf("[SERVER] Done with handleClientThread fct...\n");
 
     // still listening clients who are looking for a bomberstudent server
     return handleClientThread(threadArgs);

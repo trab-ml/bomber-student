@@ -5,6 +5,10 @@ Ce projet a pour but de créer un serveur de jeu proposant à ses utilisateurs d
 part le client permettant à des utilisateurs de se connecter au serveur afin de jouer les uns contre
 les autres.
 
+## A Faire
+
+- Gérer en intégralité [les requêtes des joueurs](./src/query_handler.c), notamment en passant la main à [la logique du jeu](./src/game_main.c) qui est entièrement fonctionnelle.
+
 ## TESTER
 
 ```bash
